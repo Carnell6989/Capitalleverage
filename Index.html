@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capital Leverage — Legal Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --orange: #E8571A;
+  --orange-dim: #c44a12;
+  --orange-glow: rgba(232,87,26,0.15);
+  --gold: #C9962A;
+  --bg: #080808;
+  --surface: #111111;
+  --surface2: #181818;
+  --surface3: #202020;
+  --border: #252525;
+  --border2: #303030;
+  --text: #F2EFE9;
+  --text2: #9A9189;
+  --text3: #5A534E;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow:hidden; }
+
+.app { display:flex; height:100vh; }
+.sidebar { width:270px; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; }
+.main { flex:1; display:flex; flex-direction:column; }
+.chat-wrap { flex:1; overflow-y:auto; padding:28px 36px; }
+.msg { max-width:78%; padding:14px 18px; border-radius:16px; margin-bottom:10px; line-height:1.6; }
+.msg-user { background:var(--orange); color:white; margin-left:auto; }
+.msg-ai { background:var(--surface2); border:1px solid var(--border); }
+.typing { display:flex; gap:6px; padding:14px; background:var(--surface2); border-radius:16px; width:fit-content; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar" id="sidebar">
+    <!-- Your sidebar content here -->
+    <button onclick="newCase()">+ New Case</button>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <!-- Your topbar -->
+    </div>
+
+    <div class="chat-wrap" id="chat-wrap">
+      <!-- Welcome or messages -->
+    </div>
+
+    <div class="input-area">
+      <button onclick="document.getElementById('file-upload').click()">📎 Upload Document</button>
+      <input type="file" id="file-upload" style="display:none" onchange="handleFileUpload(this.files[0])">
+      <textarea id="user-input" placeholder="Describe your situation..."></textarea>
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// SARVAM KEY
+const SARVAM_API_KEY = "sk_oj39s0g1_nhITBRxKF4YgF9PWnzJGMbiA";
+
+const SYSTEM_PROMPT = `You are Capital Leverage...`; // Your full prompt
+
+let cases = JSON.parse(localStorage.getItem('cl_cases') || '{}');
+let currentCaseId = null;
+
+async function callAI(messages) {
+  const res = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${SARVAM_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "sarvam-30b",
+      messages: [{role:"system", content: SYSTEM_PROMPT}, ...messages],
+      temperature: 0.7,
+      max_tokens: 1200
+    })
+  });
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+async function handleFileUpload(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const content = e.target.result.substring(0, 8000);
+    appendMsg('user', `Uploaded: ${file.name}`);
+    const reply = await callAI([{role:'user', content: `Analyze this document for legal advice: ${content}`}]);
+    appendMsg('ai', reply);
+  };
+  reader.readAsText(file);
+}
+
+// Your other functions (sendMessage, appendMsg, modals, etc.)
+function appendMsg(role, text) {
+  const wrap = document.getElementById('chat-wrap');
+  const div = document.createElement('div');
+  div.className = role === 'user' ? 'msg msg-user' : 'msg msg-ai';
+  div.innerHTML = text;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function sendMessage() {
+  // Your send logic
+}
+
+// Init
+window.onload = () => {
+  // Your init
+};
+</script>
+</body>
+</html>
