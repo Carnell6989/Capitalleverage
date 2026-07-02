@@ -7,6 +7,12 @@ cat > templates/index.html <<'EOF'
   <meta charset="UTF-8">
   <title>Capital Leverage</title>
   <link rel="stylesheet" href="/static/css/style.css">
+
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#d4af37">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Capital Leverage">
+
 </head>
 <body>
   <div class="app">
@@ -27,6 +33,7 @@ cat > templates/index.html <<'EOF'
       <button class="nav" onclick="showPage('email', this)">📧 Email</button>
       <button class="nav" onclick="showPage('documents', this)">📄 Documents</button>
       <button class="nav" onclick="showPage('agents', this)">🤖 Agents</button>
+      <button class="nav" onclick="showPage('memory', this)">🧠 Memory</button>
       <button class="nav" onclick="showPage('opportunities', this)">🚀 Opportunities</button>
       <button class="nav" onclick="showPage('templates', this)">📑 Templates</button>
       <button class="nav" onclick="showPage('settings', this)">⚙️ Settings</button>
@@ -369,6 +376,23 @@ cat > templates/index.html <<'EOF'
           <textarea id="opp-goal" placeholder="Tell Capital Leverage your goal: housing, credit, business funding, legal process, etc."></textarea>
           <button onclick="buildOpportunityPlan()">Build Opportunity Plan</button>
           <pre id="opp-answer"></pre>
+        </div>
+      </section>
+    
+      <section id="memory" class="page">
+        <div class="cards">
+          <div class="card">🧠 App Memory<br><span>Save the mission, rules, cases, strategies, and leverage knowledge.</span></div>
+          <div class="card">⚖️ Law Leverage<br><span>Keep legal process principles and strategy notes.</span></div>
+          <div class="card">🏠 Housing Leverage<br><span>Save housing paths, programs, and application strategies.</span></div>
+          <div class="card">💳 Credit Leverage<br><span>Save dispute, CFPB, and bureau strategy rules.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Capital Leverage Memory</h3>
+          <textarea id="memory-text" placeholder="Add everything Capital Leverage should remember globally..."></textarea>
+          <button onclick="saveMemory()">Save Memory</button>
+          <button onclick="loadMemory()">Refresh Memory</button>
+          <pre id="memory-status"></pre>
         </div>
       </section>
     </main>

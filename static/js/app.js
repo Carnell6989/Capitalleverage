@@ -518,3 +518,27 @@ async function saveEmailAsEvidence() {
 
   alert("Email saved to Evidence Vault.");
 }
+
+async function loadMemory() {
+  const box = document.getElementById("memory-text");
+  const status = document.getElementById("memory-status");
+  if (!box) return;
+
+  const res = await fetch("/memory");
+  const data = await res.json();
+  box.value = data.memory || "";
+  status.innerText = "Memory loaded.";
+}
+
+async function saveMemory() {
+  const memory = document.getElementById("memory-text").value;
+  const status = document.getElementById("memory-status");
+
+  await fetch("/memory", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ memory })
+  });
+
+  status.innerText = "Memory saved. Capital Leverage will now use this in AI answers.";
+}

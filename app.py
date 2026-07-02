@@ -313,6 +313,26 @@ Return:
 """
     return jsonify(ai_router(prompt, "document"))
 
+
+MEMORY_FILE = DATA_DIR / "memory.json"
+
+@app.route("/memory", methods=["GET"])
+def get_memory():
+    memory = load_json(MEMORY_FILE)
+    if isinstance(memory, list):
+        return jsonify({"memory": ""})
+    return jsonify(memory)
+
+@app.route("/memory", methods=["POST"])
+def save_memory():
+    data = request.json
+    memory = {
+        "memory": data.get("memory", ""),
+        "updated_at": datetime.now().isoformat()
+    }
+    save_json(MEMORY_FILE, memory)
+    return jsonify(memory)
+
 @app.route("/health")
 def health():
     return jsonify({"status": "ok", "app": "Capital Leverage 2.5"})

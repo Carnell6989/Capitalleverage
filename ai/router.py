@@ -1,5 +1,7 @@
 import os
 import requests
+import json
+from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -11,6 +13,17 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
 TODAY = datetime.now().strftime("%A, %B %d, %Y")
+
+
+def load_app_memory():
+    path = Path("data/memory.json")
+    if not path.exists():
+        return ""
+    try:
+        data = json.loads(path.read_text())
+        return data.get("memory", "")
+    except Exception:
+        return ""
 
 SYSTEM_PROMPT = f"""
 You are Capital Leverage, a community-focused AI leverage platform.
@@ -107,7 +120,7 @@ def ask_gemini(message):
     r = requests.post(
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
         headers={"Content-Type": "application/json", "X-goog-api-key": GEMINI_API_KEY},
-        json={"contents": [{"parts": [{"text": SYSTEM_PROMPT + "\n\nUser:\n" + message}]}]},
+        json={"contents": [{"parts": [{"text": SYSTEM_PROMPT + "\n\nCapital Leverage Memory:\n" + load_app_memory() + "\n\nUser:\n" + message}]}]},
         timeout=90
     )
 
@@ -127,7 +140,7 @@ def ask_groq(message):
             "model": "llama-3.1-8b-instant",
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": message}
+                {"role": "user", "content": "Capital Leverage Memory:\n" + load_app_memory() + "\n\nUser Request:\n" + message}
             ],
             "temperature": 0.25
         },
@@ -155,7 +168,7 @@ def ask_openrouter(message):
             "model": "meta-llama/llama-3.1-8b-instruct:free",
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": message}
+                {"role": "user", "content": "Capital Leverage Memory:\n" + load_app_memory() + "\n\nUser Request:\n" + message}
             ],
             "temperature": 0.25
         },
