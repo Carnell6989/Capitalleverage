@@ -174,60 +174,38 @@ cat > templates/index.html <<'EOF'
 </section>
 
 
-
 <section id="business" class="page">
-  <div class="hero">
-    <h2>💼 Capital Leverage Business Center</h2>
-    <p>Even with a 500 credit score, Capital Leverage can build a 60-day business funding readiness strategy. We help organize credit repair, disputes, business structure, D&B setup, business plans, lender readiness, and funding documents.</p>
-  </div>
-
   <div class="cards">
-    <div class="card">🏗️ Construction<br><span>Contracting, repairs, flips, labor, equipment, and local service funding.</span></div>
-    <div class="card">🍔 Restaurant / Food<br><span>Food service, catering, food truck, kitchen, and product business plans.</span></div>
-    <div class="card">🚚 Trucking<br><span>Transportation, dispatch, box truck, cargo van, and logistics funding.</span></div>
-    <div class="card">🏠 Real Estate<br><span>Flips, rentals, land, property service, and housing business strategy.</span></div>
+    <div class="card">📝 Business Plan<br><span>Build a professional funding plan.</span></div>
+    <div class="card">🏦 Loan Prep<br><span>Prepare lender-ready documents.</span></div>
+    <div class="card">📄 Contracts<br><span>Create templates and agreements.</span></div>
+    <div class="card">📬 Outreach<br><span>Investor, lender, and partner emails.</span></div>
   </div>
 
-  <div class="panel business-leverage-card">
-    <h3>💰 Business Funding Readiness</h3>
-    <p>
-      Capital Leverage builds the strategy: credit cleanup, dispute planning, CFPB complaint drafts,
-      certified-mail letter planning, D&B setup, vendor account research, business plan drafting,
-      lender checklist, and a 60-day execution calendar.
-    </p>
-
-    <div class="business-chip-grid">
-      <button onclick="openBusinessIndustry('Construction')">🏗️ Construction</button>
-      <button onclick="openBusinessIndustry('Restaurant / Food')">🍔 Restaurant / Food</button>
-      <button onclick="openBusinessIndustry('Trucking / Transportation')">🚚 Trucking</button>
-      <button onclick="openBusinessIndustry('Cleaning Company')">🧹 Cleaning Company</button>
-      <button onclick="openBusinessIndustry('Social Media / Creator Business')">📱 Social Media</button>
-      <button onclick="openBusinessIndustry('Real Estate / Flipping')">🏠 Real Estate / Flipping</button>
-      <button onclick="openBusinessIndustry('Beauty / Barbershop / Salon')">💈 Beauty / Barbershop</button>
-      <button onclick="openBusinessIndustry('Healthcare / Wellness')">🩺 Healthcare / Wellness</button>
-      <button onclick="openBusinessIndustry('Landscaping')">🌱 Landscaping</button>
-      <button onclick="openBusinessIndustry('Consulting / Service Business')">📊 Consulting</button>
+  <div class="dashboard-grid">
+    <div class="profile-card">
+      <h3>Business Leverage Score</h3>
+      <div class="score-circle">61%</div>
+      <p>Based on plan, documents, funding readiness, and business structure.</p>
+    </div>
+    <div class="goal-card">
+      <h3>Funding Readiness</h3>
+      <div class="goal-row"><span>Business Plan</span><div class="bar"><div style="width:70%"></div></div></div>
+      <div class="goal-row"><span>Revenue Model</span><div class="bar"><div style="width:55%"></div></div></div>
+      <div class="goal-row"><span>Loan Documents</span><div class="bar"><div style="width:35%"></div></div></div>
+      <div class="goal-row"><span>Pitch Package</span><div class="bar"><div style="width:48%"></div></div></div>
     </div>
   </div>
 
   <div class="panel">
     <h3>Business Builder</h3>
-    <input id="business-name" placeholder="Business name, example: Harrison's Construction">
-    <input id="business-type" placeholder="Business type, example: Construction company">
-    <input id="business-credit-score" placeholder="Credit score, example: 500, 650, 750">
-    <input id="business-funding-goal" placeholder="Funding goal, example: $250,000">
-    <textarea id="business-details" placeholder="Tell Capital Leverage what you want to build, your state, credit situation, collections, income, and funding goal..."></textarea>
-
-    <div class="command-buttons">
-      <button onclick="buildBusinessPlan()">Build Business Plan</button>
-      <button onclick="buildBusinessFundingPlan()">Build 60-Day Funding Strategy</button>
-      <button onclick="copyTextById('business-answer')">Copy</button>
-    </div>
-
-    <pre id="business-answer"></pre>
+    <input id="biz-name" placeholder="Business name">
+    <input id="biz-type" placeholder="Business type">
+    <textarea id="biz-goal" placeholder="What do you want this business to do?"></textarea>
+    <button onclick="sendBusinessPrompt()">Build Business Plan</button>
+    <pre id="biz-answer"></pre>
   </div>
 </section>
-
 
 
 <section id="realestate" class="page">
@@ -486,65 +464,42 @@ cat > templates/index.html <<'EOF'
           <pre id="mycase-answer"></pre>
         </div>
       </section>
-    
+    </main>
+  </div>
 
+  
 <section id="command" class="page">
   <div class="hero">
     <h2>🚀 Capital Leverage Command Center</h2>
-    <p>One command center for credit, business, housing, legal, documents, and leverage strategy.</p>
+    <p>For everyone: credit, business, housing, legal, documents, and strategy in one place.</p>
   </div>
 
   <div class="cards">
     <div class="card">💳 Credit<br><span>Disputes, CFPB, bureaus, collectors.</span></div>
-    <div class="card">💼 Business<br><span>Funding, D&B, business plans, loan readiness.</span></div>
-    <div class="card">🏠 Housing<br><span>Programs, ownership, rent, landlord issues.</span></div>
-    <div class="card">📄 Documents<br><span>Upload, organize, analyze, and use evidence.</span></div>
+    <div class="card">💼 Business<br><span>Funding, business plans, D&B, loan readiness.</span></div>
+    <div class="card">⚖️ Legal<br><span>Claims, evidence, letters, complaints.</span></div>
+    <div class="card">📄 Documents<br><span>Upload, review, organize, use as leverage.</span></div>
   </div>
 
   <div class="panel">
-    <h3>🚀 Command Center Actions</h3>
-
-    <div class="mycase-command-grid">
-      <button onclick="runPublicCommandTask('credit')">💳 Run Credit Strategy</button>
-      <button onclick="runPublicCommandTask('business')">💼 Build Business Funding Plan</button>
-      <button onclick="runPublicCommandTask('housing')">🏠 Build Housing Plan</button>
-      <button onclick="runPublicCommandTask('legal')">⚖️ Build Legal Strategy</button>
-      <button onclick="runPublicCommandTask('documents')">📄 Document / Evidence Plan</button>
-      <button onclick="runPublicCommandTask('full')">🚀 Full Leverage Plan</button>
-      <button onclick="runPublicCommandTask('calendar')">📅 60-Day Calendar Plan</button>
-      <button onclick="runPublicCommandTask('letters')">✍️ Draft Letters / Complaints</button>
-    </div>
-
-    <h3>Talk to Capital Leverage Command Center</h3>
+    <h3>Run Command Center</h3>
 
     <select id="command-type" class="model-select">
-      <option value="full">🚀 Full Leverage Plan</option>
-      <option value="credit">💳 Credit Agent</option>
-      <option value="business">💼 Business Funding Agent</option>
-      <option value="housing">🏠 Housing Agent</option>
-      <option value="legal">⚖️ Legal Agent</option>
-      <option value="documents">📄 Document Agent</option>
-      <option value="research">🌐 Web Research Agent</option>
+      <option value="general">🚀 Full Leverage Plan</option>
+      <option value="credit">💳 Credit Strategy</option>
+      <option value="business">💼 Business Funding</option>
+      <option value="legal">⚖️ Legal Strategy</option>
+      <option value="housing">🏠 Housing Strategy</option>
+      <option value="documents">📄 Document Strategy</option>
     </select>
 
-    <textarea id="command-input" placeholder="Tell Capital Leverage what is going on. Example: I have a 580 credit score, collections, need a business loan, and want a 60-day plan..."></textarea>
+    <textarea id="command-input" placeholder="Tell Capital Leverage what is going on..."></textarea>
 
-    <div class="command-buttons">
-      <button onclick="runCommandCenter()">Ask Selected Agent</button>
-      <button onclick="runPublicCommandTask('full')">All Agents Work Together</button>
-      <button onclick="copyTextById('command-answer')">Copy</button>
-    </div>
-
+    <button onclick="runCommandCenter()">Build Command Plan</button>
+    <button onclick="copyTextById('command-answer')">Copy</button>
     <pre id="command-answer"></pre>
   </div>
 </section>
-
-
-</main>
-  </div>
-
-  
-
 
 
   <script src="/static/js/app.js"></script>
