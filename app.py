@@ -337,5 +337,146 @@ def save_memory():
 def health():
     return jsonify({"status": "ok", "app": "Capital Leverage 2.5"})
 
+
+@app.route("/my-case/all-agents", methods=["POST"])
+def my_case_all_agents():
+    data = request.json
+    question = data.get("question", "")
+    case_data = load_json(DATA_DIR / "my_case.json")
+
+    prompt = f"""
+You are the Capital Leverage Multi-Agent Case Team.
+
+Case Memory:
+{case_data}
+
+User Question:
+{question}
+
+Work as a team:
+1. Legal Agent
+2. Credit/FCRA Agent
+3. Document Evidence Agent
+4. Damages Agent
+5. Settlement/Discovery Agent
+
+Return:
+1. Legal Agent analysis
+2. Credit/FCRA Agent analysis
+3. Document/Evidence Agent analysis
+4. Damages Agent analysis
+5. Settlement/Discovery Agent analysis
+6. Combined best strategy
+7. Next 5 actions
+8. Draft language if useful
+
+Reminder: not legal advice; verify rules, deadlines, and filings.
+"""
+    return jsonify(ai_router(prompt, "backup"))
+
+
+
+from ai.web_research import web_research
+
+@app.route("/my-case/research", methods=["POST"])
+def my_case_research():
+    data = request.json
+    question = data.get("question", "")
+    case_data = load_json(DATA_DIR / "my_case.json")
+
+    research = web_research(question, max_results=5)
+
+    prompt = f"""
+You are the Capital Leverage My Case Web Research Agent.
+
+Case Memory:
+{case_data}
+
+User Question:
+{question}
+
+Live Web Research Results:
+{research}
+
+Answer using the research above. Do not invent citations.
+Return:
+1. What the research says
+2. How it applies to the UMA case
+3. Strongest leverage points
+4. Risks or weaknesses
+5. Next actions
+6. Sources used with URLs
+"""
+    return jsonify(ai_router(prompt, "backup"))
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)
+
+@app.route("/my-case", methods=["GET"])
+def get_my_case():
+    return jsonify(load_json(DATA_DIR / "my_case.json"))
+
+@app.route("/my-case/ask", methods=["POST"])
+def ask_my_case():
+    data = request.json
+    question = data.get("question", "")
+    mode = data.get("mode", "legal")
+    case_data = load_json(DATA_DIR / "my_case.json")
+
+    prompt = f"""
+You are the Capital Leverage My Case Agent.
+
+Use this case memory:
+{case_data}
+
+User question:
+{question}
+
+Answer as a case-focused legal process assistant:
+1. What this means for the UMA case
+2. Strongest leverage points
+3. Weaknesses or risks
+4. Evidence/exhibits needed
+5. Next steps
+6. Draft language if useful
+
+Reminder: Capital Leverage is not a law firm and the user must verify court rules and filings.
+"""
+    return jsonify(ai_router(prompt, mode))
+
+@app.route("/my-case/all-agents", methods=["POST"])
+def my_case_all_agents():
+    data = request.json
+    question = data.get("question", "")
+    case_data = load_json(DATA_DIR / "my_case.json")
+
+    prompt = f"""
+You are the Capital Leverage Multi-Agent Case Team.
+
+Case Memory:
+{case_data}
+
+User Question:
+{question}
+
+Work as a team with these agents:
+1. Legal Agent
+2. Credit/FCRA Agent
+3. Document Evidence Agent
+4. Damages Agent
+5. Settlement/Discovery Agent
+
+Return:
+1. Legal Agent analysis
+2. Credit/FCRA Agent analysis
+3. Document/Evidence Agent analysis
+4. Damages Agent analysis
+5. Settlement/Discovery Agent analysis
+6. Combined best strategy
+7. Next 5 actions
+8. Draft language if useful
+
+Reminder: not legal advice; verify rules, deadlines, and filings.
+"""
+    return jsonify(ai_router(prompt, "backup"))

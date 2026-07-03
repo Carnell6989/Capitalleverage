@@ -26,6 +26,7 @@ cat > templates/index.html <<'EOF'
       </div>
 
       <button class="nav active" onclick="showPage('chat', this)">💬 AI Chat</button>
+      <button class="nav" onclick="showPage('mycase', this)">💪 My Case</button>
       <button class="nav" onclick="showPage('legal', this)">⚖️ Legal</button>
       <button class="nav" onclick="showPage('credit', this)">💳 Credit</button>
       <button class="nav" onclick="showPage('business', this)">💼 Business</button>
@@ -51,8 +52,8 @@ cat > templates/index.html <<'EOF'
           <div class="profile-card">
             <h3>Capital Leverage Profile</h3>
             <p>Your leverage score tracks housing, credit, legal, business, and documents.</p>
-            <div class="score-circle">72%</div>
-            <button onclick="buildLeveragePlan()">Build My Leverage Plan</button>
+            <div class="score-circle"><span id="leverage-score-text">0%</span></div>
+            <button onclick="buildLeveragePlan()"><span onclick="buildMyLeveragePlan()">Build My Leverage Plan</span></button>
           </div>
 
           <div class="goal-card">
@@ -79,8 +80,8 @@ cat > templates/index.html <<'EOF'
 
         <div class="panel">
           <h3>What do you need leverage for?</h3>
-          <textarea id="leverage-goal" placeholder="Example: I need housing with bad credit, help fixing collections, and a business funding plan."></textarea>
-          <button onclick="buildLeveragePlan()">Generate Leverage Plan</button>
+          <textarea id="leverage-goal" id="leverage-goal" placeholder="Example: I need housing with bad credit, help fixing collections, and a business funding plan."></textarea>
+          <button onclick="buildLeveragePlan()"><span onclick="generateLeveragePlan()">Generate Leverage Plan</span></button>
           <pre id="leverage-answer"></pre>
         </div>
 
@@ -96,13 +97,22 @@ cat > templates/index.html <<'EOF'
           <select id="mode" class="model-select">
             <option value="fast">⚡ Fast AI</option>
             <option value="document">📄 Document AI</option>
-            <option value="backup">🔁 Backup AI</option>
+            <option value="research">🌐 Web Research AI</option>
+            <option value="backup">🌐 OpenRouter AI</option>
             <option value="local">💻 Local AI</option>
           </select>
 
+          <div id="chat-window" class="chat-window"></div>
+
+          <div class="chat-actions">
+            <button onclick="newChat()">New Chat</button>
+            <button onclick="copyChat()">Copy Chat</button>
+            <button onclick="clearChat()">Clear Chat</button>
+          </div>
+
           <textarea id="msg" placeholder="Ask Capital Leverage anything..."></textarea>
           <button onclick="sendMsg()">Ask AI</button>
-          <pre id="out"></pre>
+          <pre id="out" style="display:none;"></pre>
         </section>
       </section>
 
@@ -393,6 +403,42 @@ cat > templates/index.html <<'EOF'
           <button onclick="saveMemory()">Save Memory</button>
           <button onclick="loadMemory()">Refresh Memory</button>
           <pre id="memory-status"></pre>
+        </div>
+      </section>
+    
+      <section id="mycase" class="page">
+        <div class="hero">
+          <h2>💪 My Case Command Center</h2>
+          <p>Harrison v. UMA Education, Inc. — Motion to Dismiss, evidence, claims, damages, discovery, and settlement leverage.</p>
+        </div>
+
+        <div class="cards">
+          <div class="card">⚖️ Claims<br><span>FCRA, fraud, unjust enrichment, IDCSA.</span></div>
+          <div class="card">📅 Timeline<br><span>June 1, June 2, June 11, June 14, June 17.</span></div>
+          <div class="card">📎 Evidence<br><span>Exhibits C, G, H, P, Q, R, calls, emails.</span></div>
+          <div class="card">💰 Damages<br><span>Pell burn, debt, interest, reputation, emotional harm.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Talk to My Case Agent</h3>
+          <select id="mycase-ai-mode">
+            <option value="legal">⚖️ Legal Agent</option>
+            <option value="credit">💳 Credit/FCRA Agent</option>
+            <option value="document">📄 Document Evidence Agent</option>
+            <option value="business">💼 Business/Damages Agent</option>
+            <option value="research">🌐 Web Research AI</option>
+            <option value="backup">🌐 OpenRouter AI</option>
+            <option value="fast">⚡ Fast AI</option>
+          </select>
+
+          <textarea id="mycase-question" placeholder="Ask about your UMA case, motion to dismiss, exhibits, discovery, damages, settlement, or next steps..."></textarea>
+
+          <button onclick="askMyCase()">Ask Selected AI</button>
+          <button onclick="askMyCaseAllAgents()">All Agents Work Together</button>
+          <button onclick="researchMyCase()">Research Web + Answer</button>
+          <button onclick="copyTextById('mycase-answer')">Copy</button>
+
+          <pre id="mycase-answer"></pre>
         </div>
       </section>
     </main>

@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+from ai.web_research import web_research
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
@@ -165,7 +166,7 @@ def ask_openrouter(message):
             "X-Title": "Capital Leverage"
         },
         json={
-            "model": "meta-llama/llama-3.1-8b-instruct:free",
+            "model": "meta-llama/llama-3.1-8b-instruct",
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": "Capital Leverage Memory:\n" + load_app_memory() + "\n\nUser Request:\n" + message}
@@ -180,13 +181,73 @@ def ask_openrouter(message):
         raise Exception(data["error"])
     return data["choices"][0]["message"]["content"]
 
+
+def agent_prompt(mode):
+    agents = {
+        "legal": """
+You are the Capital Leverage Legal Agent.
+Focus on legal process leverage: facts, timelines, evidence, claims, damages, deadlines, motions, discovery, settlement strategy, exhibit organization, and procedural next steps.
+You are not a lawyer and do not guarantee outcomes. Tell users to verify current court rules, statutes, deadlines, and local procedures.
+""",
+        "credit": """
+You are the Capital Leverage Credit Agent.
+Focus on credit leverage: credit report analysis, CFPB complaints, Experian disputes, Equifax disputes, TransUnion disputes, debt validation, collector letters, goodwill letters, settlement strategy, and proof organization.
+Do not promise deletions or score increases.
+""",
+        "housing": """
+You are the Capital Leverage Housing Agent.
+Focus on housing leverage: FHA, USDA, VA, NACA, down payment assistance, rent-to-own, lease option, land contract, seller financing, housing counseling, lender readiness, income documents, and credit barriers.
+Say current program rules and availability must be verified.
+""",
+        "business": """
+You are the Capital Leverage Business Agent.
+Focus on business leverage: business plans, funding prep, business credit, lender packages, contracts, service offers, outreach emails, startup budgets, revenue models, and 30-day action plans.
+""",
+        "document": """
+You are the Capital Leverage Document Agent.
+Focus on document leverage: summarize documents, extract dates, names, entities, claims, issues, contradictions, deadlines, evidence value, and next steps.
+Do not invent facts outside the document.
+""",
+        "email": """
+You are the Capital Leverage Email Draft Agent.
+Focus on email leverage: summarize emails, identify urgency, extract deadlines, draft professional replies, turn emails into evidence notes, and suggest next actions.
+Do not send anything automatically.
+"""
+    }
+    return agents.get(mode, "")
+
 def ai_router(message, mode="fast"):
     errors = []
 
+    agent = agent_prompt(mode)
+
+    research = ""
+    try:
+        research = web_research(message, max_results=4)
+    except Exception as e:
+        research = f"Web research unavailable: {e}"
+
+    message = f"""
+Capital Leverage live web research:
+{research}
+
+User request:
+{message}
+"""
+
+    if agent:
+        message = agent + "\n\n" + message
+
     if mode == "document":
         order = [("Gemini", ask_gemini), ("Groq", ask_groq), ("OpenRouter", ask_openrouter)]
+    elif mode == "research":
+        order = [("OpenRouter", ask_openrouter), ("Gemini", ask_gemini), ("Groq", ask_groq)]
     elif mode == "backup":
         order = [("OpenRouter", ask_openrouter), ("Gemini", ask_gemini), ("Groq", ask_groq)]
+    elif mode == "local":
+        order = [("Ollama", ask_ollama)]
+    elif mode in ["legal", "credit", "housing", "business", "email"]:
+        order = [("Gemini", ask_gemini), ("OpenRouter", ask_openrouter), ("Groq", ask_groq)]
     else:
         order = [("Groq", ask_groq), ("Gemini", ask_gemini), ("OpenRouter", ask_openrouter)]
 

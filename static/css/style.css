@@ -358,3 +358,58 @@ EOF
   flex-wrap: wrap;
   margin: 12px 0;
 }
+
+.plan-builder-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.78);
+  z-index: 99999;
+  padding: 18px;
+}
+
+.plan-builder-box {
+  width: min(650px, 94vw);
+  background: #111113;
+  border: 1px solid #333;
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.plan-builder-box h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.plan-builder-box p {
+  color: #cbd5e1;
+  font-size: 17px;
+}
+
+.plan-builder-box select,
+.plan-builder-box textarea {
+  width: 100%;
+  margin-top: 14px;
+  font-size: 18px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #050505;
+  color: white;
+  border: 1px solid #333;
+}
+
+.plan-builder-box textarea {
+  min-height: 180px;
+}
+
+.modal-close {
+  float: right;
+  background: #27272a;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 24px;
+  padding: 4px 12px;
+}

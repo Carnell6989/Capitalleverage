@@ -542,3 +542,180 @@ async function saveMemory() {
 
   status.innerText = "Memory saved. Capital Leverage will now use this in AI answers.";
 }
+
+function showPage(pageId, btn) {
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.remove("active");
+    page.style.display = "none";
+  });
+
+  const target = document.getElementById(pageId);
+  if (target) {
+    target.classList.add("active");
+    target.style.display = "block";
+  }
+
+  document.querySelectorAll(".nav").forEach(n => n.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+
+  if (pageId === "documents" && typeof loadDocuments === "function") loadDocuments();
+  if (pageId === "memory" && typeof loadMemory === "function") loadMemory();
+  if (pageId === "cases" && typeof loadCases === "function") loadCases();
+  if (pageId === "evidence" && typeof loadEvidence === "function") loadEvidence();
+}
+
+async function askMyCase() {
+  const q = document.getElementById("mycase-question").value;
+  const out = document.getElementById("mycase-answer");
+
+  if (!q.trim()) {
+    out.innerText = "Ask something about your UMA case first.";
+    return;
+  }
+
+  out.innerText = "My Case Agent is working...";
+
+  const res = await fetch("/my-case/ask", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({question: q})
+  });
+
+  const data = await res.json();
+  out.innerText = data.answer || "No response returned.";
+}
+
+async function askMyCase() {
+  const q = document.getElementById("mycase-question").value;
+  const out = document.getElementById("mycase-answer");
+  const mode = document.getElementById("mycase-ai-mode")?.value || "legal";
+
+  if (!q.trim()) {
+    out.innerText = "Ask something about your UMA case first.";
+    return;
+  }
+
+  out.innerText = "Selected My Case AI is working...";
+
+  const res = await fetch("/my-case/ask", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({question: q, mode: mode})
+  });
+
+  const data = await res.json();
+  out.innerText = data.answer || "No response returned.";
+}
+
+async function askMyCaseAllAgents() {
+  const q = document.getElementById("mycase-question").value;
+  const out = document.getElementById("mycase-answer");
+
+  if (!q.trim()) {
+    out.innerText = "Ask something about your UMA case first.";
+    return;
+  }
+
+  out.innerText = "All Capital Leverage case agents are working together...";
+
+  const res = await fetch("/my-case/all-agents", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({question: q})
+  });
+
+  const data = await res.json();
+  out.innerText = data.answer || "No response returned.";
+}
+
+async function researchMyCase() {
+  const q = document.getElementById("mycase-question").value;
+  const out = document.getElementById("mycase-answer");
+
+  if (!q.trim()) {
+    out.innerText = "Ask a research question about your UMA case first.";
+    return;
+  }
+
+  out.innerText = "Searching the web and case law sources...";
+
+  const res = await fetch("/my-case/research", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({question: q})
+  });
+
+  const data = await res.json();
+  out.innerText = data.answer || "No research answer returned.";
+}
+
+function openPlanBuilder() {
+  let modal = document.getElementById("plan-builder-modal");
+
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "plan-builder-modal";
+    modal.className = "plan-builder-modal";
+    modal.innerHTML = `
+      <div class="plan-builder-box">
+        <button class="modal-close" onclick="closePlanBuilder()">×</button>
+        <h2>Build My Leverage Plan</h2>
+        <p>Choose what you want Capital Leverage to build.</p>
+
+        <select id="plan-type">
+          <option value="Housing">🏠 Housing Plan</option>
+          <option value="Credit">💳 Credit Repair Plan</option>
+          <option value="Legal">⚖️ Legal Strategy</option>
+          <option value="Business">💼 Business Funding Plan</option>
+          <option value="Documents">📄 Document/Evidence Plan</option>
+          <option value="Full">🚀 Full Leverage Plan</option>
+        </select>
+
+        <textarea id="plan-details" placeholder="Tell Capital Leverage what is going on, what you need, and what outcome you want..."></textarea>
+
+        <button onclick="submitPlanBuilder()">Generate Plan</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.style.display = "flex";
+}
+
+function closePlanBuilder() {
+  const modal = document.getElementById("plan-builder-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function submitPlanBuilder() {
+  const type = document.getElementById("plan-type").value;
+  const details = document.getElementById("plan-details").value;
+  const msg = document.getElementById("msg");
+
+  closePlanBuilder();
+
+  msg.value = `Use web research and build a ${type} Capital Leverage plan.
+
+Details:
+${details}
+
+Return:
+1. Best strategy
+2. Laws/rules/programs to verify
+3. Documents needed
+4. Step-by-step actions
+5. Deadlines to check
+6. Draft language if useful.`;
+
+  msg.scrollIntoView({behavior:"smooth", block:"center"});
+  msg.focus();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("button").forEach(btn => {
+    const t = btn.innerText.trim();
+    if (t === "Build My Leverage Plan" || t === "Generate Leverage Plan") {
+      btn.onclick = openPlanBuilder;
+    }
+  });
+});
