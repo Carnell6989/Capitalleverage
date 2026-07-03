@@ -719,3 +719,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+async function runMyCaseTask(taskName) {
+  const q = document.getElementById("mycase-question")?.value || "";
+  const out = document.getElementById("mycase-answer");
+
+  if (!out) return;
+
+  const labels = {
+    legal_review: "Running Legal Review...",
+    case_law: "Searching web and finding case law...",
+    discovery: "Building Discovery Requests...",
+    cfpb: "Drafting CFPB Complaint...",
+    damages: "Building Damages Summary...",
+    settlement: "Creating Settlement Package...",
+    timeline: "Building Case Timeline...",
+    exhibits: "Creating Exhibit Plan..."
+  };
+
+  out.innerText = labels[taskName] || "Running My Case task...";
+
+  const res = await fetch("/my-case/task", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({task: taskName, question: q})
+  });
+
+  const data = await res.json();
+  out.innerText = data.answer || "No task response returned.";
+}

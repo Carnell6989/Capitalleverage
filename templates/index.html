@@ -420,6 +420,19 @@ cat > templates/index.html <<'EOF'
         </div>
 
         <div class="panel">
+          <h3>💪 My Case Command Center</h3>
+
+          <div class="mycase-command-grid">
+            <button onclick="runMyCaseTask('legal_review')">⚖️ Run Legal Review</button>
+            <button onclick="runMyCaseTask('case_law')">🌐 Find Case Law</button>
+            <button onclick="runMyCaseTask('discovery')">📩 Build Discovery</button>
+            <button onclick="runMyCaseTask('cfpb')">🏛️ Draft CFPB Complaint</button>
+            <button onclick="runMyCaseTask('damages')">💰 Build Damages Summary</button>
+            <button onclick="runMyCaseTask('settlement')">🤝 Settlement Package</button>
+            <button onclick="runMyCaseTask('timeline')">🕒 Case Timeline</button>
+            <button onclick="runMyCaseTask('exhibits')">📎 Exhibit Plan</button>
+          </div>
+
           <h3>Talk to My Case Agent</h3>
           <select id="mycase-ai-mode">
             <option value="legal">⚖️ Legal Agent</option>

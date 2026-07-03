@@ -413,3 +413,32 @@ EOF
   font-size: 24px;
   padding: 4px 12px;
 }
+
+.mycase-command-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 16px 0 22px;
+}
+
+.mycase-command-grid button {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #333;
+  background: #15151a;
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.mycase-command-grid button:hover {
+  background: #22222a;
+  border-color: #d4af37;
+}
+
+@media (max-width: 700px) {
+  .mycase-command-grid {
+    grid-template-columns: 1fr;
+  }
+}

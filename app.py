@@ -410,6 +410,62 @@ Return:
     return jsonify(ai_router(prompt, "backup"))
 
 
+
+@app.route("/my-case/task", methods=["POST"])
+def my_case_task():
+    data = request.json
+    task = data.get("task", "case_strategy")
+    question = data.get("question", "")
+    case_data = load_json(DATA_DIR / "my_case.json")
+
+    task_prompts = {
+        "legal_review": "Run a legal review of the UMA opposition and surviving claims. Identify strongest arguments, weak points, missing support, and next steps.",
+        "case_law": "Use web research to find relevant law, cases, statutes, and rules for the user question. Explain how each source may help the UMA case. Do not invent citations.",
+        "discovery": "Build discovery requests for UMA: interrogatories, requests for production, admissions, deposition topics, and documents to demand.",
+        "cfpb": "Draft a CFPB complaint connected to the facts. Include company, product/service, issue, timeline, harm, requested resolution, and documents to attach.",
+        "damages": "Build a damages summary: Pell LEU burn, debt/interest, reputational harm, emotional distress, opportunity loss, evidence needed, and expert proof.",
+        "settlement": "Create a settlement leverage package: liability theory, damages theory, evidence list, negotiation posture, demand structure, and next actions.",
+        "timeline": "Build a clean case timeline from the facts and identify deadlines, proof gaps, and exhibit connections.",
+        "exhibits": "Create an exhibit/evidence plan: what each exhibit proves, how to label it, where it supports each count, and what is missing."
+    }
+
+    task_instruction = task_prompts.get(task, task_prompts["legal_review"])
+
+    research = ""
+    if task in ["case_law", "legal_review", "settlement", "cfpb"]:
+        try:
+            research = web_research(question or task_instruction, max_results=5)
+        except Exception as e:
+            research = f"Web research unavailable: {e}"
+
+    prompt = f"""
+You are the Capital Leverage My Case Command Center.
+
+Case Memory:
+{case_data}
+
+Task:
+{task_instruction}
+
+User Extra Details / Question:
+{question}
+
+Live Web Research if available:
+{research}
+
+Return a powerful, case-focused result with:
+1. Short summary
+2. Key leverage points
+3. Evidence needed
+4. Draft language if useful
+5. Next 5 actions
+6. Sources used if web research was provided
+
+Do not invent facts. If current law/rules are needed, say they must be verified.
+Capital Leverage is not a law firm.
+"""
+    return jsonify(ai_router(prompt, "research" if research else "legal"))
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)
 
@@ -445,38 +501,3 @@ Reminder: Capital Leverage is not a law firm and the user must verify court rule
 """
     return jsonify(ai_router(prompt, mode))
 
-@app.route("/my-case/all-agents", methods=["POST"])
-def my_case_all_agents():
-    data = request.json
-    question = data.get("question", "")
-    case_data = load_json(DATA_DIR / "my_case.json")
-
-    prompt = f"""
-You are the Capital Leverage Multi-Agent Case Team.
-
-Case Memory:
-{case_data}
-
-User Question:
-{question}
-
-Work as a team with these agents:
-1. Legal Agent
-2. Credit/FCRA Agent
-3. Document Evidence Agent
-4. Damages Agent
-5. Settlement/Discovery Agent
-
-Return:
-1. Legal Agent analysis
-2. Credit/FCRA Agent analysis
-3. Document/Evidence Agent analysis
-4. Damages Agent analysis
-5. Settlement/Discovery Agent analysis
-6. Combined best strategy
-7. Next 5 actions
-8. Draft language if useful
-
-Reminder: not legal advice; verify rules, deadlines, and filings.
-"""
-    return jsonify(ai_router(prompt, "backup"))
