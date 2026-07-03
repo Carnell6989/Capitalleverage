@@ -2036,22 +2036,33 @@ async function loadMusicManagerData() {
     const campaigns = await (await fetch("/music/campaigns")).json();
     const links = await (await fetch("/music/links")).json();
 
-    document.getElementById("music-artists-list").innerHTML =
-      artists.length ? artists.map(a => `<div class="doc-card"><strong>${a.name}</strong><br>${a.genre}<br>${a.goal}</div>`).join("") : "No artists yet.";
+    const artistBox = document.getElementById("music-artists-list");
+    const campaignBox = document.getElementById("music-campaigns-list");
+    const linkBox = document.getElementById("music-links-list");
 
-    document.getElementById("music-campaigns-list").innerHTML =
-      campaigns.length ? campaigns.map(c => `<div class="doc-card"><strong>${c.title}</strong><br>${c.artist}<br>${c.platform}<br>${c.status}</div>`).join("") : "No campaigns yet.";
+    if (artistBox) {
+      artistBox.innerHTML = artists.length ? artists.map(a => `
+        <div class="doc-card"><strong>${a.name}</strong><br>${a.genre}<br>${a.goal}</div>
+      `).join("") : "No artists yet.";
+    }
 
-    document.getElementById("music-links-list").innerHTML =
-      links.length ? links.map(l => `<div class="doc-card"><strong>${l.campaign}</strong><br>${l.artist}<br>${l.url}<br>Clicks: ${l.clicks}</div>`).join("") : "No links yet.";
-  } catch (e) {
-    console.log("Music data load failed", e);
-  }
+    if (campaignBox) {
+      campaignBox.innerHTML = campaigns.length ? campaigns.map(c => `
+        <div class="doc-card"><strong>${c.title}</strong><br>${c.artist}<br>${c.platform}<br>${c.status}</div>
+      `).join("") : "No campaigns yet.";
+    }
+
+    if (linkBox) {
+      linkBox.innerHTML = links.length ? links.map(l => `
+        <div class="doc-card"><strong>${l.campaign}</strong><br>${l.artist}<br>${l.url}<br>Clicks: ${l.clicks}</div>
+      `).join("") : "No links yet.";
+    }
+  } catch (e) {}
 }
 
 async function musicManagerAgent(task) {
   const out = document.getElementById("music-manager-control-answer") || document.getElementById("music-dashboard-answer");
-  const genre = window.selectedMusicGenre || document.getElementById("music-artist-genre")?.value || "";
+  const genre = selectedMusicGenre || document.getElementById("music-artist-genre")?.value || "";
   const artist = document.getElementById("music-artist-name")?.value || document.getElementById("music-campaign-artist")?.value || "";
   const details = document.getElementById("music-campaign-input")?.value || document.getElementById("music-artist-goal")?.value || "";
 
@@ -2069,4 +2080,131 @@ async function musicManagerAgent(task) {
   } catch (e) {
     if (out) out.textContent = "Music Manager agent failed: " + e;
   }
+}
+
+// load music data when Business page opens
+const oldShowPageMusic = typeof showPage === "function" ? showPage : null;
+if (oldShowPageMusic) {
+  window.showPage = function(page, btn) {
+    oldShowPageMusic(page, btn);
+    if (page === "business") {
+      setTimeout(loadMusicManagerData, 400);
+    }
+  };
+}
+
+// =========================
+// MUSIC MANAGER FULL SYSTEM
+// =========================
+
+async function saveMusicArtist() {
+  const body = {
+    name: document.getElementById("music-artist-name")?.value || "",
+    genre: document.getElementById("music-artist-genre")?.value || "",
+    goal: document.getElementById("music-artist-goal")?.value || ""
+  };
+
+  await fetch("/music/artists", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  loadMusicManagerData();
+}
+
+async function saveMusicCampaign() {
+  const body = {
+    artist: document.getElementById("music-campaign-artist")?.value || "",
+    title: document.getElementById("music-campaign-title")?.value || "",
+    platform: document.getElementById("music-campaign-platform")?.value || "",
+    goal: document.getElementById("music-campaign-goal")?.value || ""
+  };
+
+  await fetch("/music/campaigns", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  loadMusicManagerData();
+}
+
+async function saveMusicLink() {
+  const body = {
+    artist: document.getElementById("music-link-artist")?.value || "",
+    campaign: document.getElementById("music-link-campaign")?.value || "",
+    url: document.getElementById("music-link-url")?.value || ""
+  };
+
+  await fetch("/music/links", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  loadMusicManagerData();
+}
+
+async function loadMusicManagerData() {
+  try {
+    const artists = await (await fetch("/music/artists")).json();
+    const campaigns = await (await fetch("/music/campaigns")).json();
+    const links = await (await fetch("/music/links")).json();
+
+    const artistBox = document.getElementById("music-artists-list");
+    const campaignBox = document.getElementById("music-campaigns-list");
+    const linkBox = document.getElementById("music-links-list");
+
+    if (artistBox) {
+      artistBox.innerHTML = artists.length ? artists.map(a => `
+        <div class="doc-card"><strong>${a.name}</strong><br>${a.genre}<br>${a.goal}</div>
+      `).join("") : "No artists yet.";
+    }
+
+    if (campaignBox) {
+      campaignBox.innerHTML = campaigns.length ? campaigns.map(c => `
+        <div class="doc-card"><strong>${c.title}</strong><br>${c.artist}<br>${c.platform}<br>${c.status}</div>
+      `).join("") : "No campaigns yet.";
+    }
+
+    if (linkBox) {
+      linkBox.innerHTML = links.length ? links.map(l => `
+        <div class="doc-card"><strong>${l.campaign}</strong><br>${l.artist}<br>${l.url}<br>Clicks: ${l.clicks}</div>
+      `).join("") : "No links yet.";
+    }
+  } catch (e) {}
+}
+
+async function musicManagerAgent(task) {
+  const out = document.getElementById("music-manager-control-answer") || document.getElementById("music-dashboard-answer");
+  const genre = selectedMusicGenre || document.getElementById("music-artist-genre")?.value || "";
+  const artist = document.getElementById("music-artist-name")?.value || document.getElementById("music-campaign-artist")?.value || "";
+  const details = document.getElementById("music-campaign-input")?.value || document.getElementById("music-artist-goal")?.value || "";
+
+  if (out) out.textContent = "Music Manager OS is working...";
+
+  try {
+    const res = await fetch("/music/manager-agent", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ task, artist, genre, details })
+    });
+
+    const data = await res.json();
+    if (out) out.textContent = data.answer || JSON.stringify(data, null, 2);
+  } catch (e) {
+    if (out) out.textContent = "Music Manager agent failed: " + e;
+  }
+}
+
+// load music data when Business page opens
+const oldShowPageMusic = typeof showPage === "function" ? showPage : null;
+if (oldShowPageMusic) {
+  window.showPage = function(page, btn) {
+    oldShowPageMusic(page, btn);
+    if (page === "business") {
+      setTimeout(loadMusicManagerData, 400);
+    }
+  };
 }
