@@ -7,3 +7,9 @@ data/
 credentials.json
 token.pickle
 token.json
+
+# secret env files
+.env
+.env.*
+*.env
+*.env.*

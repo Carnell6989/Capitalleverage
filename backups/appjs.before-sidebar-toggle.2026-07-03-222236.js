@@ -1869,32 +1869,3 @@ function startMarketAutoRefresh() {
   loadMarketScan();
   marketAutoRefreshTimer = setInterval(loadMarketScan, 15000);
 }
-
-// =========================
-// SIDEBAR COLLAPSE CONTROL
-// =========================
-
-function toggleSidebar() {
-  const app = document.querySelector(".app");
-  if (!app) return;
-
-  app.classList.toggle("sidebar-collapsed");
-
-  try {
-    localStorage.setItem(
-      "capitalLeverageSidebarCollapsed",
-      app.classList.contains("sidebar-collapsed") ? "yes" : "no"
-    );
-  } catch (e) {}
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  const app = document.querySelector(".app");
-  if (!app) return;
-
-  try {
-    if (localStorage.getItem("capitalLeverageSidebarCollapsed") === "yes") {
-      app.classList.add("sidebar-collapsed");
-    }
-  } catch (e) {}
-});

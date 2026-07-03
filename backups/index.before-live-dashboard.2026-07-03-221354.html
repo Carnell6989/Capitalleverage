@@ -42,10 +42,7 @@ cat > templates/index.html <<'EOF'
       <button class="nav" onclick="showPage('settings', this)">⚙️ Settings</button>
     </aside>
 
-    
-<button id="sidebar-toggle" class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
-<main class="main">
-
+    <main class="main">
       <section class="hero">
         <h2 id="page-title">Welcome to Capital Leverage</h2>
         <p id="page-subtitle">Your AI workspace for legal, credit, business, documents, and strategy.</p>
@@ -596,35 +593,6 @@ cat > templates/index.html <<'EOF'
     </div>
 
     
-
-
-<div class="panel live-trading-dashboard">
-  <h3>📺 Live Trading Dashboard</h3>
-  <p class="small-note">Click a symbol from the Market Board to update this screen.</p>
-
-  <div class="live-stock-header">
-    <div>
-      <h2 id="live-symbol-title">SPY</h2>
-      <p id="live-symbol-status">Waiting for market scan...</p>
-    </div>
-    <div class="live-stock-stats">
-      <span id="live-price">Price: —</span>
-      <span id="live-high">High: —</span>
-      <span id="live-low">Low: —</span>
-      <span id="live-change">Change: —</span>
-    </div>
-  </div>
-
-  <iframe
-    id="tradingview-frame"
-    class="tradingview-frame"
-    src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview-frame&symbol=NASDAQ%3AAAPL&interval=5&hidesidetoolbar=1&symboledit=1&saveimage=0&toolbarbg=0f172a&studies=%5B%5D&theme=dark&style=1&timezone=America%2FNew_York"
-    frameborder="0"
-    allowtransparency="true"
-    scrolling="no">
-  </iframe>
-</div>
-
 
 <div class="panel">
   <h3>📡 Live Market Board</h3>
