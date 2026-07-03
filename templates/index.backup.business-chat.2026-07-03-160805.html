@@ -31,7 +31,6 @@ cat > templates/index.html <<'EOF'
       <button class="nav" onclick="showPage('legal', this)">⚖️ Legal</button>
       <button class="nav" onclick="showPage('credit', this)">💳 Credit</button>
       <button class="nav" onclick="showPage('business', this)">💼 Business</button>
-      <button class="nav" onclick="showPage('trading', this)">📈 Trading Lab</button>
       <button class="nav" onclick="showPage('realestate', this)">🏠 Real Estate</button>
       <button class="nav" onclick="showPage('email', this)">📧 Email</button>
       <button class="nav" onclick="showPage('documents', this)">📄 Documents</button>
@@ -211,28 +210,22 @@ cat > templates/index.html <<'EOF'
     </div>
   </div>
 
-  
   <div class="panel">
-    <h3>💼 Business Chat Builder</h3>
-    <p class="small-note">
-      Ask Capital Leverage to generate business names, business descriptions, funding strategy,
-      business plans, credit-readiness steps, or lender-ready documents. For stronger credit/funding advice,
-      upload a credit report, screenshot, or document in the Documents section.
-    </p>
-
-    <textarea id="business-chat-input" placeholder="Example: Generate business names for a construction company in Michigan near Indiana. Or build a 60-day plan to get ready for a $250,000 business loan."></textarea>
+    <h3>Business Builder</h3>
+    <input id="business-name" placeholder="Business name, example: Harrison's Construction">
+    <input id="business-type" placeholder="Business type, example: Construction company">
+    <input id="business-credit-score" placeholder="Credit score, example: 500, 650, 750">
+    <input id="business-funding-goal" placeholder="Funding goal, example: $250,000">
+    <textarea id="business-details" placeholder="Tell Capital Leverage what you want to build, your state, credit situation, collections, income, and funding goal..."></textarea>
 
     <div class="command-buttons">
-      <button onclick="askBusinessChat()">Ask Business Agent</button>
-      <button onclick="businessQuickPrompt('names')">Generate Names</button>
-      <button onclick="businessQuickPrompt('description')">Business Description</button>
-      <button onclick="businessQuickPrompt('funding')">Funding Strategy</button>
+      <button onclick="buildBusinessPlan()">Build Business Plan</button>
+      <button onclick="buildBusinessFundingPlan()">Build 60-Day Funding Strategy</button>
       <button onclick="copyTextById('business-answer')">Copy</button>
     </div>
 
     <pre id="business-answer"></pre>
   </div>
-
 </section>
 
 
@@ -534,15 +527,7 @@ cat > templates/index.html <<'EOF'
       <option value="research">🌐 Web Research Agent</option>
     </select>
 
-    <div class="command-upload-box">
-      <h3>📎 Upload Files for Command Center</h3>
-      <p>Upload credit reports, screenshots, PDFs, letters, court papers, business documents, photos, or evidence.</p>
-      <input type="file" id="command-files" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.mp4,.mov,.m4a,.mp3" multiple>
-      <button onclick="uploadCommandFiles()">Upload to Command Center</button>
-      <pre id="command-upload-result"></pre>
-    </div>
-
-    <textarea id="command-input" placeholder="Tell Capital Leverage what you want done with the uploaded files or your situation. Example: Review these credit report screenshots and build a dispute + funding plan..."></textarea>
+    <textarea id="command-input" placeholder="Tell Capital Leverage what is going on. Example: I have a 580 credit score, collections, need a business loan, and want a 60-day plan..."></textarea>
 
     <div class="command-buttons">
       <button onclick="runCommandCenter()">Ask Selected Agent</button>
@@ -554,61 +539,6 @@ cat > templates/index.html <<'EOF'
   </div>
 </section>
 
-
-
-<section id="trading" class="page">
-  <div class="hero">
-    <h2>📈 Capital Leverage Trading Bot Lab</h2>
-    <p>Build paper-trading strategies, OpenAlice setup plans, watchlists, entry/exit rules, and 24/7 bot instructions. Default risk rule: maximum 1% stop loss per trade.</p>
-  </div>
-
-  <div class="panel premium-gate" id="trading-premium-gate">
-    <h3>🔐 Premium Trading Lab</h3>
-    <p>Trading Bot Lab is built as a premium module. Free users get a 7-day trial. Paid users keep full access.</p>
-    <button onclick="startTradingTrial()">Start 7-Day Trial</button>
-    <button onclick="unlockTradingDemo()">Unlock Demo Access</button>
-    <pre id="trading-access-status"></pre>
-  </div>
-
-  <div id="trading-lab-content" style="display:none;">
-    <div class="cards">
-      <div class="card">🤖 OpenAlice Setup<br><span>Plan the OpenAlice install, broker connection, and bot rules.</span></div>
-      <div class="card">🧪 Paper Trading<br><span>Test strategies before risking real money.</span></div>
-      <div class="card">🛑 1% Stop Loss<br><span>Default risk rule: only risk 1% per trade.</span></div>
-      <div class="card">📊 Trade Chart<br><span>Track entries, exits, wins, losses, and bot performance.</span></div>
-    </div>
-
-    <div class="panel">
-      <h3>Trading Lab Actions</h3>
-      <div class="mycase-command-grid">
-        <button onclick="runTradingTask('strategy')">📈 Build Trading Strategy</button>
-        <button onclick="runTradingTask('watchlist')">👀 Create Watchlist</button>
-        <button onclick="runTradingTask('entry_exit')">🎯 Entry / Exit Rules</button>
-        <button onclick="runTradingTask('risk')">🛑 1% Risk Rules</button>
-        <button onclick="runTradingTask('paper')">🧪 Paper Trading Setup</button>
-        <button onclick="runTradingTask('openalice')">🤖 OpenAlice Setup</button>
-        <button onclick="runTradingTask('vps')">🖥️ 24/7 VPS Bot Plan</button>
-        <button onclick="runTradingTask('journal')">📓 Trading Journal</button>
-      </div>
-
-      <h3>Trading Bot Instructions</h3>
-      <textarea id="trading-input" placeholder="Example: Build me a paper trading strategy for stocks under $50. I only want 1% stop loss, 2-3% take profit, and no more than 3 trades per day."></textarea>
-
-      <div class="command-buttons">
-        <button onclick="runTradingTask('custom')">Ask Trading Agent</button>
-        <button onclick="copyTextById('trading-answer')">Copy</button>
-      </div>
-
-      <pre id="trading-answer"></pre>
-    </div>
-
-    <div class="panel">
-      <h3>📊 Trade Performance Chart</h3>
-      <p class="small-note">This starts as a demo chart. Later we can connect it to OpenAlice or Alpaca paper trading logs.</p>
-      <canvas id="trade-chart" height="180"></canvas>
-    </div>
-  </div>
-</section>
 
 </main>
   </div>

@@ -31,7 +31,6 @@ cat > templates/index.html <<'EOF'
       <button class="nav" onclick="showPage('legal', this)">⚖️ Legal</button>
       <button class="nav" onclick="showPage('credit', this)">💳 Credit</button>
       <button class="nav" onclick="showPage('business', this)">💼 Business</button>
-      <button class="nav" onclick="showPage('trading', this)">📈 Trading Lab</button>
       <button class="nav" onclick="showPage('realestate', this)">🏠 Real Estate</button>
       <button class="nav" onclick="showPage('email', this)">📧 Email</button>
       <button class="nav" onclick="showPage('documents', this)">📄 Documents</button>
@@ -554,61 +553,6 @@ cat > templates/index.html <<'EOF'
   </div>
 </section>
 
-
-
-<section id="trading" class="page">
-  <div class="hero">
-    <h2>📈 Capital Leverage Trading Bot Lab</h2>
-    <p>Build paper-trading strategies, OpenAlice setup plans, watchlists, entry/exit rules, and 24/7 bot instructions. Default risk rule: maximum 1% stop loss per trade.</p>
-  </div>
-
-  <div class="panel premium-gate" id="trading-premium-gate">
-    <h3>🔐 Premium Trading Lab</h3>
-    <p>Trading Bot Lab is built as a premium module. Free users get a 7-day trial. Paid users keep full access.</p>
-    <button onclick="startTradingTrial()">Start 7-Day Trial</button>
-    <button onclick="unlockTradingDemo()">Unlock Demo Access</button>
-    <pre id="trading-access-status"></pre>
-  </div>
-
-  <div id="trading-lab-content" style="display:none;">
-    <div class="cards">
-      <div class="card">🤖 OpenAlice Setup<br><span>Plan the OpenAlice install, broker connection, and bot rules.</span></div>
-      <div class="card">🧪 Paper Trading<br><span>Test strategies before risking real money.</span></div>
-      <div class="card">🛑 1% Stop Loss<br><span>Default risk rule: only risk 1% per trade.</span></div>
-      <div class="card">📊 Trade Chart<br><span>Track entries, exits, wins, losses, and bot performance.</span></div>
-    </div>
-
-    <div class="panel">
-      <h3>Trading Lab Actions</h3>
-      <div class="mycase-command-grid">
-        <button onclick="runTradingTask('strategy')">📈 Build Trading Strategy</button>
-        <button onclick="runTradingTask('watchlist')">👀 Create Watchlist</button>
-        <button onclick="runTradingTask('entry_exit')">🎯 Entry / Exit Rules</button>
-        <button onclick="runTradingTask('risk')">🛑 1% Risk Rules</button>
-        <button onclick="runTradingTask('paper')">🧪 Paper Trading Setup</button>
-        <button onclick="runTradingTask('openalice')">🤖 OpenAlice Setup</button>
-        <button onclick="runTradingTask('vps')">🖥️ 24/7 VPS Bot Plan</button>
-        <button onclick="runTradingTask('journal')">📓 Trading Journal</button>
-      </div>
-
-      <h3>Trading Bot Instructions</h3>
-      <textarea id="trading-input" placeholder="Example: Build me a paper trading strategy for stocks under $50. I only want 1% stop loss, 2-3% take profit, and no more than 3 trades per day."></textarea>
-
-      <div class="command-buttons">
-        <button onclick="runTradingTask('custom')">Ask Trading Agent</button>
-        <button onclick="copyTextById('trading-answer')">Copy</button>
-      </div>
-
-      <pre id="trading-answer"></pre>
-    </div>
-
-    <div class="panel">
-      <h3>📊 Trade Performance Chart</h3>
-      <p class="small-note">This starts as a demo chart. Later we can connect it to OpenAlice or Alpaca paper trading logs.</p>
-      <canvas id="trade-chart" height="180"></canvas>
-    </div>
-  </div>
-</section>
 
 </main>
   </div>

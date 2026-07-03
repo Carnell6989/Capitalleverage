@@ -1,3 +1,39 @@
+let commandUploadedFiles = [];
+
+async function uploadCommandFiles() {
+  const fileInput = document.getElementById("command-files");
+  const out = document.getElementById("command-upload-result");
+
+  if (!fileInput || !fileInput.files.length) {
+    out.innerText = "Choose at least one file, screenshot, PDF, or document first.";
+    return;
+  }
+
+  out.innerText = "Uploading files to Capital Leverage Command Center...\n";
+  commandUploadedFiles = [];
+
+  for (const file of fileInput.files) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/documents/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      commandUploadedFiles.push(file.name);
+      out.innerText += `\n✅ Uploaded: ${file.name}`;
+      if (data.message) out.innerText += `\n${data.message}\n`;
+    } catch (err) {
+      out.innerText += `\n❌ Error uploading ${file.name}: ${err.message}\n`;
+    }
+  }
+
+  out.innerText += "\nNow type your command below and hit Ask Selected Agent or All Agents Work Together.";
+}
+
 async function runCommandCenter() {
   const type = document.getElementById("command-type")?.value || "full";
   return runPublicCommandTask(type);
@@ -21,13 +57,20 @@ async function runPublicCommandTask(task) {
     research: "Web Research Plan"
   }[task] || "Full Leverage Plan";
 
-  out.innerText = "Capital Leverage agents are building: " + taskName + "...";
+  const files = commandUploadedFiles.length
+    ? commandUploadedFiles.join(", ")
+    : "No files uploaded in this command session yet.";
+
+  out.innerText = "Capital Leverage agents are working on: " + taskName + "...";
 
   const prompt = `You are Capital Leverage Command Center.
 
 Task: ${taskName}
 
-User situation:
+Uploaded files in this session:
+${files}
+
+User command / situation:
 ${input || "The user has not added details yet. Give a strong starter checklist and tell them what to upload or answer next."}
 
 Work like a multi-agent team:
@@ -38,23 +81,25 @@ Work like a multi-agent team:
 5. Document/Evidence Agent
 6. Web Research Agent
 
-Use live web research when helpful.
-
-Response style:
-- Do not say "Direct Answer"
-- Sound confident and practical
-- Say "Here is the move"
-- Say "We are going to"
-- Do not guarantee approval, deletion, funding, or legal outcome
+Rules:
+- If files were uploaded, tell the user how those files should be used.
+- If the user needs credit/funding help, tell them to upload a credit report or screenshots for a stronger analysis.
+- If the user needs legal help, tell them to upload letters, contracts, notices, reports, court papers, emails, screenshots, or evidence.
+- Use live web research when helpful.
+- Do not say "Direct Answer."
+- Sound confident and practical.
+- Say "Here is the move" and "We are going to."
+- Do not guarantee approval, deletion, funding, or legal outcome.
 
 Return:
 1. Here is the move
 2. Agent breakdown
-3. What to upload
-4. What documents to draft
-5. What laws/rules/programs to research
-6. 60-day action plan
-7. Next 10 actions`;
+3. Uploaded file use-plan
+4. What documents/screenshots to upload next
+5. What documents to draft
+6. What laws/rules/programs to research
+7. 60-day action plan
+8. Next 10 actions`;
 
   try {
     const res = await fetch("/ask", {
@@ -73,5 +118,6 @@ Return:
   }
 }
 
+window.uploadCommandFiles = uploadCommandFiles;
 window.runCommandCenter = runCommandCenter;
 window.runPublicCommandTask = runPublicCommandTask;
