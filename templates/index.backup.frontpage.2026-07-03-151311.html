@@ -1,0 +1,511 @@
+cd ~/CapitalLeverage
+
+cat > templates/index.html <<'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Capital Leverage</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#d4af37">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Capital Leverage">
+
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">CL</div>
+        <div>
+          <h1>Capital Leverage</h1>
+          <p>AI Workspace</p>
+        </div>
+      </div>
+
+      <button class="nav active" onclick="showPage('chat', this)">💬 AI Chat</button>
+      <button class="nav" onclick="showPage('command', this)">🚀 Command Center</button>
+      <button class="nav" onclick="showPage('mycase', this)">💪 My Case</button>
+      <button class="nav" onclick="showPage('legal', this)">⚖️ Legal</button>
+      <button class="nav" onclick="showPage('credit', this)">💳 Credit</button>
+      <button class="nav" onclick="showPage('business', this)">💼 Business</button>
+      <button class="nav" onclick="showPage('realestate', this)">🏠 Real Estate</button>
+      <button class="nav" onclick="showPage('email', this)">📧 Email</button>
+      <button class="nav" onclick="showPage('documents', this)">📄 Documents</button>
+      <button class="nav" onclick="showPage('agents', this)">🤖 Agents</button>
+      <button class="nav" onclick="showPage('memory', this)">🧠 Memory</button>
+      <button class="nav" onclick="showPage('opportunities', this)">🚀 Opportunities</button>
+      <button class="nav" onclick="showPage('templates', this)">📑 Templates</button>
+      <button class="nav" onclick="showPage('settings', this)">⚙️ Settings</button>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <h2 id="page-title">Welcome to Capital Leverage</h2>
+        <p id="page-subtitle">Your AI workspace for legal, credit, business, documents, and strategy.</p>
+      </section>
+
+      <section id="chat" class="page active-page">
+
+        <div class="dashboard-grid">
+          <div class="profile-card">
+            <h3>Capital Leverage Profile</h3>
+            <p>Your leverage score tracks housing, credit, legal, business, and documents.</p>
+            <div class="score-circle"><span id="leverage-score-text">0%</span></div>
+            <button onclick="buildLeveragePlan()"><span onclick="buildMyLeveragePlan()">Build My Leverage Plan</span></button>
+          </div>
+
+          <div class="goal-card">
+            <h3>Leverage Goals</h3>
+            <div class="goal-row"><span>Housing Readiness</span><div class="bar"><div style="width:68%"></div></div></div>
+            <div class="goal-row"><span>Credit Repair</span><div class="bar"><div style="width:54%"></div></div></div>
+            <div class="goal-row"><span>Legal Organization</span><div class="bar"><div style="width:82%"></div></div></div>
+            <div class="goal-row"><span>Business Funding</span><div class="bar"><div style="width:41%"></div></div></div>
+          </div>
+
+          <div class="graph-card">
+            <h3>Leverage Growth</h3>
+            <div class="mini-chart">
+              <div style="height:35%"></div>
+              <div style="height:50%"></div>
+              <div style="height:42%"></div>
+              <div style="height:70%"></div>
+              <div style="height:62%"></div>
+              <div style="height:85%"></div>
+            </div>
+            <p>Track progress as users add documents, cases, credit items, and housing goals.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>What do you need leverage for?</h3>
+          <textarea id="leverage-goal" id="leverage-goal" placeholder="Example: I need housing with bad credit, help fixing collections, and a business funding plan."></textarea>
+          <button onclick="buildLeveragePlan()"><span onclick="generateLeveragePlan()">Generate Leverage Plan</span></button>
+          <pre id="leverage-answer"></pre>
+        </div>
+
+        <div class="cards">
+          <div class="card">⚖️ Legal Cases<br><span>Organize lawsuits, evidence, timelines, and drafts.</span></div>
+          <div class="card">💳 Credit<br><span>Disputes, collections, repair plans, and letters.</span></div>
+          <div class="card">💼 Business<br><span>Plans, funding, contracts, and operations.</span></div>
+          <div class="card">📄 Documents<br><span>Upload and analyze files.</span></div>
+        </div>
+
+        <section class="chat-box">
+          <label class="model-label">AI Mode</label>
+          <select id="mode" class="model-select">
+            <option value="fast">⚡ Fast AI</option>
+            <option value="document">📄 Document AI</option>
+            <option value="research">🌐 Web Research AI</option>
+            <option value="backup">🌐 OpenRouter AI</option>
+            <option value="local">💻 Local AI</option>
+          </select>
+
+          <div id="chat-window" class="chat-window"></div>
+
+          <div class="chat-actions">
+            <button onclick="newChat()">New Chat</button>
+            <button onclick="copyChat()">Copy Chat</button>
+            <button onclick="clearChat()">Clear Chat</button>
+          </div>
+
+          <div class="chat-input-area">
+            <textarea id="msg" placeholder="Ask Capital Leverage anything..."></textarea>
+            <button onclick="sendMsg()">Ask AI</button>
+          </div>
+          <pre id="out" style="display:none;"></pre>
+        </section>
+      </section>
+
+      <section id="legal" class="page">
+        <div class="cards">
+          <div class="card">📁 Cases<br><span>Create and manage legal cases.</span></div>
+          <div class="card">🧾 Evidence<br><span>Store exhibits, emails, screenshots, and records.</span></div>
+          <div class="card">🕒 Timeline<br><span>Build a clean timeline of events.</span></div>
+          <div class="card">✍️ Drafts<br><span>Draft motions, letters, discovery, and responses.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Create Legal Case</h3>
+          <input id="case-name" placeholder="Case name, example: UMA Lawsuit">
+          <input id="case-type" placeholder="Case type, example: Federal Civil Case">
+          
+          <textarea id="case-notes" placeholder="Short notes about the case..."></textarea>
+          <button onclick="createCase()">Save Case</button>
+        </div>
+
+        <div class="panel">
+          <h3>Saved Cases</h3>
+          <div id="case-list"></div>
+        </div>
+
+        
+<div class="panel legal-upload-panel">
+  <h3>📎 Legal Evidence Upload</h3>
+  <p>Upload PDFs, screenshots, photos, letters, emails, recordings, or case documents. Then talk to the Legal Agent about what the file proves.</p>
+
+  <input type="file" id="legal-evidence-file" accept=".pdf,.png,.jpg,.jpeg,.webp,.doc,.docx,.txt,.mp4,.mov,.m4a,.mp3" multiple>
+  <button onclick="uploadLegalEvidence()">Upload Evidence</button>
+
+  <pre id="legal-upload-result"></pre>
+</div>
+
+        </div>
+      </section>
+
+      
+<section id="credit" class="page">
+  <div class="cards">
+    <div class="card">💳 Credit Report<br><span>Upload and analyze credit reports.</span></div>
+    <div class="card">🏛️ CFPB Complaint<br><span>Draft complaints for credit issues.</span></div>
+    <div class="card">📨 Bureau Disputes<br><span>Experian, Equifax, TransUnion letters.</span></div>
+    <div class="card">📈 Repair Strategy<br><span>Build a step-by-step leverage plan.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>Credit Leverage Builder</h3>
+    <input id="credit-item" placeholder="Account/problem, example: T-Mobile collection $1,690">
+    <textarea id="credit-facts" placeholder="Explain what happened, dates, amount, dispute reason, proof you have..."></textarea>
+    <button onclick="buildCreditPlan()">Build Credit Dispute Plan</button>
+    <pre id="credit-answer"></pre>
+  </div>
+</section>
+
+
+<section id="business" class="page">
+  <div class="cards">
+    <div class="card">📝 Business Plan<br><span>Build a professional funding plan.</span></div>
+    <div class="card">🏦 Loan Prep<br><span>Prepare lender-ready documents.</span></div>
+    <div class="card">📄 Contracts<br><span>Create templates and agreements.</span></div>
+    <div class="card">📬 Outreach<br><span>Investor, lender, and partner emails.</span></div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="profile-card">
+      <h3>Business Leverage Score</h3>
+      <div class="score-circle">61%</div>
+      <p>Based on plan, documents, funding readiness, and business structure.</p>
+    </div>
+    <div class="goal-card">
+      <h3>Funding Readiness</h3>
+      <div class="goal-row"><span>Business Plan</span><div class="bar"><div style="width:70%"></div></div></div>
+      <div class="goal-row"><span>Revenue Model</span><div class="bar"><div style="width:55%"></div></div></div>
+      <div class="goal-row"><span>Loan Documents</span><div class="bar"><div style="width:35%"></div></div></div>
+      <div class="goal-row"><span>Pitch Package</span><div class="bar"><div style="width:48%"></div></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Business Builder</h3>
+    <input id="biz-name" placeholder="Business name">
+    <input id="biz-type" placeholder="Business type">
+    <textarea id="biz-goal" placeholder="What do you want this business to do?"></textarea>
+    <button onclick="sendBusinessPrompt()">Build Business Plan</button>
+    <pre id="biz-answer"></pre>
+  </div>
+</section>
+
+
+<section id="realestate" class="page">
+  <div class="cards">
+    <div class="card">🏠 Housing Access<br><span>Find low/down-payment pathways.</span></div>
+    <div class="card">📋 Readiness Plan<br><span>Income, credit, documents, barriers.</span></div>
+    <div class="card">🤝 Seller Financing<br><span>Lease option, land contract, rent-to-own.</span></div>
+    <div class="card">🧮 Deal Calculator<br><span>Estimate ARV, repairs, cash flow.</span></div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="profile-card">
+      <h3>Housing Leverage Score</h3>
+      <div class="score-circle">68%</div>
+      <p>Tracks readiness for FHA, USDA, NACA, DPA, rent-to-own, and seller financing.</p>
+    </div>
+    <div class="goal-card">
+      <h3>Housing Readiness</h3>
+      <div class="goal-row"><span>Income History</span><div class="bar"><div style="width:75%"></div></div></div>
+      <div class="goal-row"><span>Credit Barriers</span><div class="bar"><div style="width:45%"></div></div></div>
+      <div class="goal-row"><span>Down Payment Options</span><div class="bar"><div style="width:62%"></div></div></div>
+      <div class="goal-row"><span>Documents Ready</span><div class="bar"><div style="width:50%"></div></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Housing Leverage Plan</h3>
+    <textarea id="housing-goal" placeholder="Example: I have bad credit, 2 years work history, want a house with 0-3.5% down in Indiana."></textarea>
+    <button onclick="buildHousingPlan()">Build Housing Plan</button>
+    <pre id="housing-answer"></pre>
+  </div>
+</section>
+
+
+
+<section id="email" class="page">
+  <div class="cards">
+    <div class="card">📥 Email Review<br><span>Paste any email and get a summary.</span></div>
+    <div class="card">⚖️ Evidence Check<br><span>Find legal, credit, housing, or business value.</span></div>
+    <div class="card">✍️ Draft Reply<br><span>Generate a clean response.</span></div>
+    <div class="card">📎 Save as Evidence<br><span>Turn emails into case notes.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>Email Intelligence</h3>
+    <div id="email-draft-workspace" class="panel">
+      <h3>Draft Email</h3>
+      <input id="draft-email-to" placeholder="To email address">
+      <input id="draft-email-subject" placeholder="Subject">
+      <textarea id="draft-email-context" placeholder="What do you want to say?"></textarea>
+      <button onclick="draftEmailWithAI()">Draft Email</button>
+      <button onclick="copyTextById('draft-email-output')">Copy Draft</button>
+      <pre id="draft-email-output"></pre>
+    </div>
+    <input id="email-sender" placeholder="From / sender email">
+    <input id="email-subject" placeholder="Email subject">
+    <textarea id="email-body" placeholder="Paste the email here..."></textarea>
+    <button onclick="reviewPastedEmail()">Review Email</button>
+    <button onclick="copyTextById('email-review-answer')">Copy Answer</button>
+    <button onclick="saveEmailAsEvidence()">Save as Evidence</button>
+    <pre id="email-review-answer"></pre>
+  </div>
+</section>
+
+<section id="documents" class="page">
+        <div class="cards">
+          <div class="card">⬆️ Upload<br><span>Upload TXT documents first. PDF support comes next.</span></div>
+          <div class="card">🔍 Analyze<br><span>Ask questions about uploaded documents.</span></div>
+          <div class="card">📂 Vault<br><span>Organize files by case or project.</span></div>
+          <div class="card">🧾 Extract<br><span>Pull dates, names, claims, and deadlines.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Upload Document</h3>
+          <input type="file" id="doc-file">
+          <button onclick="uploadDocument()">Upload</button>
+        </div>
+
+        <div class="panel">
+          <h3>Saved Documents</h3>
+          <div id="doc-list"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Analyze Document</h3>
+          <input id="doc-filename" placeholder="Filename, example: complaint.txt">
+          <textarea id="doc-question" placeholder="Ask about this document...">Summarize this document and list important dates, names, claims, and next steps.</textarea>
+          <button onclick="analyzeDocument()">Analyze</button>
+          <div class="action-row">
+            <button onclick="copyTextById('doc-answer')">Copy Answer</button>
+            <button onclick="askDocumentFollowup()">Ask Follow-Up</button>
+            <button onclick="newDocumentUpload()">Upload New File</button>
+          </div>
+
+          <textarea id="doc-followup" placeholder="Ask a follow-up about this same document..."></textarea>
+          <pre id="doc-answer"></pre>
+        </div>
+      </section>
+
+      
+<section id="agents" class="page">
+  <div class="cards">
+    <div class="card">⚖️ Legal Agent<br><span>Strategy, evidence, filings, deadlines.</span></div>
+    <div class="card">💳 Credit Agent<br><span>Disputes, CFPB, bureaus, collectors.</span></div>
+    <div class="card">🏠 Housing Agent<br><span>Programs, readiness, low-down pathways.</span></div>
+    <div class="card">💼 Business Agent<br><span>Funding, plans, contracts, outreach.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>Agent Command Center</h3>
+    <textarea id="agent-goal" placeholder="Tell the agents what to work on..."></textarea>
+    <button onclick="runAgents()">Run Capital Leverage Agents</button>
+    <pre id="agent-answer"></pre>
+  </div>
+</section>
+
+
+<section id="settings" class="page">
+  <div class="cards">
+    <div class="card">🔑 AI Providers<br><span>Groq, Gemini, OpenRouter, Ollama.</span></div>
+    <div class="card">🎨 Brand<br><span>Capital Leverage identity and colors.</span></div>
+    <div class="card">💾 Backup<br><span>Save code and data to GitHub.</span></div>
+    <div class="card">📱 Mobile Wrap<br><span>Prepare for phone app packaging.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>Capital Leverage Mission</h3>
+    <p class="muted">A leverage platform for housing, credit, contracts, legal process, business, documents, and community power.</p>
+  </div>
+</section>
+
+
+      <section id="templates" class="page">
+        <div class="cards">
+          <div class="card">🏛️ CFPB Complaint<br><span>Credit, banking, lender, or debt collector issues.</span></div>
+          <div class="card">💳 Credit Dispute<br><span>Experian, Equifax, TransUnion letters.</span></div>
+          <div class="card">🏠 Housing Letter<br><span>Rental, mortgage, seller financing, hardship.</span></div>
+          <div class="card">📄 Contract<br><span>Plain-language agreements and templates.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Capital Leverage Template Generator</h3>
+          <select id="template-type" class="model-select">
+            <option value="CFPB Complaint">CFPB Complaint</option>
+            <option value="Experian Credit Dispute">Experian Credit Dispute</option>
+            <option value="Equifax Credit Dispute">Equifax Credit Dispute</option>
+            <option value="TransUnion Credit Dispute">TransUnion Credit Dispute</option>
+            <option value="Debt Validation Letter">Debt Validation Letter</option>
+            <option value="Housing Readiness Letter">Housing Readiness Letter</option>
+            <option value="Rent-to-Own Agreement">Rent-to-Own Agreement</option>
+            <option value="Seller Financing Proposal">Seller Financing Proposal</option>
+            <option value="Business Funding Email">Business Funding Email</option>
+            <option value="Simple Service Contract">Simple Service Contract</option>
+            <option value="Settlement Demand Letter">Settlement Demand Letter</option>
+          </select>
+
+          <textarea id="template-facts" placeholder="Put the names, dates, amount, problem, account info, goal, and what you want the document to say..."></textarea>
+          <button onclick="generateTemplate()">Generate Document</button>
+          <pre id="template-answer"></pre>
+        </div>
+      </section>
+    
+      <section id="opportunities" class="page">
+        <div class="cards">
+          <div class="card">🏠 Housing Programs<br><span>Track FHA, USDA, NACA, DPA, rent-to-own, and seller financing.</span></div>
+          <div class="card">💳 Credit Moves<br><span>Track disputes, complaints, settlements, and deletions.</span></div>
+          <div class="card">🏦 Business Funding<br><span>Track grants, loans, credit lines, and applications.</span></div>
+          <div class="card">⚖️ Legal Deadlines<br><span>Track filings, responses, discovery, and evidence.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Add Opportunity</h3>
+          <input id="opp-title" placeholder="Opportunity name, example: NACA Housing Program">
+          <input id="opp-category" placeholder="Category, example: Housing">
+          <input id="opp-status" placeholder="Status, example: Need to apply">
+          <input id="opp-deadline" placeholder="Deadline, example: 2026-08-01">
+          <textarea id="opp-notes" placeholder="Notes, requirements, documents, next steps..."></textarea>
+          <button onclick="saveOpportunity()">Save Opportunity</button>
+        </div>
+
+        <div class="panel">
+          <h3>Saved Opportunities</h3>
+          <div id="opp-list"></div>
+        </div>
+
+        <div class="panel">
+          <h3>AI Opportunity Plan</h3>
+          <textarea id="opp-goal" placeholder="Tell Capital Leverage your goal: housing, credit, business funding, legal process, etc."></textarea>
+          <button onclick="buildOpportunityPlan()">Build Opportunity Plan</button>
+          <pre id="opp-answer"></pre>
+        </div>
+      </section>
+    
+      <section id="memory" class="page">
+        <div class="cards">
+          <div class="card">🧠 App Memory<br><span>Save the mission, rules, cases, strategies, and leverage knowledge.</span></div>
+          <div class="card">⚖️ Law Leverage<br><span>Keep legal process principles and strategy notes.</span></div>
+          <div class="card">🏠 Housing Leverage<br><span>Save housing paths, programs, and application strategies.</span></div>
+          <div class="card">💳 Credit Leverage<br><span>Save dispute, CFPB, and bureau strategy rules.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>Capital Leverage Memory</h3>
+          <textarea id="memory-text" placeholder="Add everything Capital Leverage should remember globally..."></textarea>
+          <button onclick="saveMemory()">Save Memory</button>
+          <button onclick="loadMemory()">Refresh Memory</button>
+          <pre id="memory-status"></pre>
+        </div>
+      </section>
+    
+      <section id="mycase" class="page">
+        <div class="hero">
+          <h2>💪 My Case Command Center</h2>
+          <p>Harrison v. UMA Education, Inc. — Motion to Dismiss, evidence, claims, damages, discovery, and settlement leverage.</p>
+        </div>
+
+        <div class="cards">
+          <div class="card">⚖️ Claims<br><span>FCRA, fraud, unjust enrichment, IDCSA.</span></div>
+          <div class="card">📅 Timeline<br><span>June 1, June 2, June 11, June 14, June 17.</span></div>
+          <div class="card">📎 Evidence<br><span>Exhibits C, G, H, P, Q, R, calls, emails.</span></div>
+          <div class="card">💰 Damages<br><span>Pell burn, debt, interest, reputation, emotional harm.</span></div>
+        </div>
+
+        <div class="panel">
+          <h3>💪 My Case Command Center</h3>
+
+          <div class="mycase-command-grid">
+            <button onclick="runMyCaseTask('legal_review')">⚖️ Run Legal Review</button>
+            <button onclick="runMyCaseTask('case_law')">🌐 Find Case Law</button>
+            <button onclick="runMyCaseTask('discovery')">📩 Build Discovery</button>
+            <button onclick="runMyCaseTask('cfpb')">🏛️ Draft CFPB Complaint</button>
+            <button onclick="runMyCaseTask('damages')">💰 Build Damages Summary</button>
+            <button onclick="runMyCaseTask('settlement')">🤝 Settlement Package</button>
+            <button onclick="runMyCaseTask('timeline')">🕒 Case Timeline</button>
+            <button onclick="runMyCaseTask('exhibits')">📎 Exhibit Plan</button>
+          </div>
+
+          <h3>Talk to My Case Agent</h3>
+          <select id="mycase-ai-mode">
+            <option value="legal">⚖️ Legal Agent</option>
+            <option value="credit">💳 Credit/FCRA Agent</option>
+            <option value="document">📄 Document Evidence Agent</option>
+            <option value="business">💼 Business/Damages Agent</option>
+            <option value="research">🌐 Web Research AI</option>
+            <option value="backup">🌐 OpenRouter AI</option>
+            <option value="fast">⚡ Fast AI</option>
+          </select>
+
+          <textarea id="mycase-question" placeholder="Ask about your UMA case, motion to dismiss, exhibits, discovery, damages, settlement, or next steps..."></textarea>
+
+          <button onclick="askMyCase()">Ask Selected AI</button>
+          <button onclick="askMyCaseAllAgents()">All Agents Work Together</button>
+          <button onclick="researchMyCase()">Research Web + Answer</button>
+          <button onclick="copyTextById('mycase-answer')">Copy</button>
+
+          <pre id="mycase-answer"></pre>
+        </div>
+      </section>
+    
+      <section id="command" class="page">
+        <div class="hero">
+          <h2>🚀 Capital Leverage Command Center</h2>
+          <p>Upload your situation, credit report, screenshots, letters, emails, or documents. Capital Leverage routes it to the right agent and builds the plan.</p>
+        </div>
+
+        <div class="command-grid">
+          <button onclick="setCommandAgent('credit')">💳 Credit Report Agent</button>
+          <button onclick="setCommandAgent('legal')">⚖️ Legal Strategy Agent</button>
+          <button onclick="setCommandAgent('housing')">🏠 Housing Agent</button>
+          <button onclick="setCommandAgent('business')">💼 Business Funding Agent</button>
+          <button onclick="setCommandAgent('document')">📄 Document/Evidence Agent</button>
+          <button onclick="setCommandAgent('research')">🌐 Web Research Agent</button>
+        </div>
+
+        <div class="panel">
+          <h3>Build Your Leverage Plan</h3>
+          <select id="command-agent">
+            <option value="credit">💳 Credit Report Agent</option>
+            <option value="legal">⚖️ Legal Strategy Agent</option>
+            <option value="housing">🏠 Housing Agent</option>
+            <option value="business">💼 Business Funding Agent</option>
+            <option value="document">📄 Document/Evidence Agent</option>
+            <option value="research">🌐 Web Research Agent</option>
+          </select>
+
+          <textarea id="command-details" placeholder="Tell Capital Leverage what is going on. Example: I have collections, bad credit, need a business loan, landlord issue, court case, or need help with documents..."></textarea>
+
+          <div class="upload-note">
+            Upload credit reports, screenshots, PDFs, letters, emails, or evidence in the Documents section, then come back here and tell the agent what to analyze.
+          </div>
+
+          <button onclick="runCommandCenter()">Run Command Center</button>
+          <button onclick="copyTextById('command-answer')">Copy</button>
+          <pre id="command-answer"></pre>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+EOF

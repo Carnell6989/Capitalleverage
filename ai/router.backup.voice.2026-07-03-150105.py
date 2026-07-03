@@ -241,13 +241,8 @@ LIVE WEB RESEARCH:
 USER REQUEST:
 {message}
 
-Return in a confident Capital Leverage command-center voice.
-Do NOT start with phrases like "Direct answer" or "Short answer."
-Speak like: "Here is the move," "Here is the plan," "We are going to..."
-Be practical, bold, organized, and action-focused.
-Do not guarantee approvals, deletions, court wins, or funding.
-Return:
-1. Capital Leverage plan
+Return a clear Capital Leverage answer with:
+1. Direct answer
 2. What the web/research says
 3. Practical leverage points
 4. Next steps
