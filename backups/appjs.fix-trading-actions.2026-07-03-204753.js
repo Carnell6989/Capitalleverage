@@ -1539,34 +1539,3 @@ async function smartTradingCommand(command) {
     if (out) out.textContent = "Smart command error: " + e;
   }
 }
-
-// =========================
-// FIX TRADING LAB BUTTONS — CLEAN OVERRIDE
-// =========================
-
-async function runTradingTask(command) {
-  const out = document.getElementById("trading-answer");
-  const input = document.getElementById("trading-input");
-  const symbol = input && input.value.trim() ? input.value.trim() : "SPY";
-
-  if (out) out.textContent = "Capital Leverage is scanning the market and building the move...";
-
-  try {
-    const res = await fetch("/trading/smart-command", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ command, symbol })
-    });
-
-    const data = await res.json();
-    if (out) out.textContent = data.answer || data.message || JSON.stringify(data, null, 2);
-  } catch (e) {
-    if (out) out.textContent = "Trading request failed: " + e;
-  }
-}
-
-function buildTradingStrategy() { return runTradingTask("strategy"); }
-function createTradingWatchlist() { return runTradingTask("watchlist"); }
-function openAliceSetupPlan() { return runTradingTask("openalice"); }
-function buildTradingJournal() { return runTradingTask("journal"); }
-function askTradingAgent() { return runTradingTask("custom"); }

@@ -768,50 +768,5 @@ def trading_market_scan():
             "message": str(e)
         }), 500
 
-
-@app.route("/trading/smart-command", methods=["POST"])
-def trading_smart_command():
-    data = request.get_json(silent=True) or {}
-    command = data.get("command", "daily")
-    symbol = data.get("symbol", "SPY")
-
-    try:
-        scan = trading_market_scan().get_json()
-    except Exception as e:
-        scan = {"watchlist": [], "top_3": [], "message": str(e)}
-
-    prompt = f"""
-You are Capital Leverage Trading Desk.
-
-Selected symbol: {symbol}
-Command: {command}
-
-Live market scan:
-{scan}
-
-Rules:
-- Paper trading only.
-- No profit guarantees.
-- Max stop loss is 1% per trade.
-- Use the live scan to choose the best opportunity.
-- Give market-aware guidance.
-
-Return:
-HERE IS THE MOVE
-BEST OPPORTUNITY RIGHT NOW
-TOP 3 TO WATCH
-NO-TRADE / AVOID LIST
-ENTRY TRIGGER
-STOP LOSS PLAN
-TAKE PROFIT PLAN
-WHAT MARKET/NEWS INFO MATTERS
-NEXT ACTION
-"""
-
-    try:
-        return jsonify(ai_router(prompt, "research"))
-    except Exception as e:
-        return jsonify({"answer": f"Smart trading command failed: {e}", "provider": "System"}), 500
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)

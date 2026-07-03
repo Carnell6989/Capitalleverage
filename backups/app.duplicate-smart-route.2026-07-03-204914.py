@@ -768,6 +768,61 @@ def trading_market_scan():
             "message": str(e)
         }), 500
 
+@app.route("/trading/smart-command", methods=["POST"])
+def trading_smart_command():
+    data = request.get_json(silent=True) or {}
+    command = data.get("command", "daily")
+    symbol = data.get("symbol", "SPY")
+
+    scan = trading_market_scan().get_json()
+    watchlist = scan.get("watchlist", []) if scan else []
+    top_3 = scan.get("top_3", []) if scan else []
+
+    prompt = f"""
+You are Capital Leverage Trading Desk.
+
+This is a PAPER TRADING command center.
+Do not promise profits.
+Risk rule: maximum 1% stop loss per trade.
+
+Command type:
+{command}
+
+Selected symbol:
+{symbol}
+
+Live market scan:
+{watchlist}
+
+Top 3 from scan:
+{top_3}
+
+Respond like a smart trading desk.
+
+Return:
+1. Here is the move
+2. Best opportunity right now
+3. Top 3 names to watch
+4. No-trade / avoid list
+5. Entry trigger
+6. Stop-loss idea using 1% risk
+7. Take-profit zones
+8. What news/web info matters
+9. Next action
+"""
+
+    try:
+        return jsonify(ai_router(prompt, "research"))
+    except Exception as e:
+        return jsonify({
+            "answer": f"Smart trading command failed: {e}",
+            "provider": "System"
+        }), 500
+
+
+# =========================
+# SMART TRADING COMMANDS
+# =========================
 
 @app.route("/trading/smart-command", methods=["POST"])
 def trading_smart_command():
@@ -776,42 +831,82 @@ def trading_smart_command():
     symbol = data.get("symbol", "SPY")
 
     try:
-        scan = trading_market_scan().get_json()
+        scan_resp = trading_market_scan()
+        scan = scan_resp.get_json()
     except Exception as e:
-        scan = {"watchlist": [], "top_3": [], "message": str(e)}
+        scan = {"success": False, "message": str(e), "watchlist": [], "top_3": []}
+
+    watchlist = scan.get("watchlist", [])
+    top_3 = scan.get("top_3", [])
+
+    command_titles = {
+        "strategy": "Build Trading Strategy",
+        "watchlist": "Create Watchlist",
+        "entry_exit": "Entry / Exit Rules",
+        "risk": "1% Risk Rules",
+        "paper": "Paper Trading Setup",
+        "openalice": "OpenAlice Setup",
+        "vps": "24/7 VPS Bot Plan",
+        "journal": "Trading Journal",
+        "custom": "Ask Trading Agent",
+        "daily": "Daily Market Brief",
+        "movers": "Top Movers",
+        "news": "News Scan",
+        "best": "Best Setup",
+        "avoid": "No-Trade List"
+    }
 
     prompt = f"""
 You are Capital Leverage Trading Desk.
 
-Selected symbol: {symbol}
-Command: {command}
+Command:
+{command_titles.get(command, command)}
+
+Selected symbol:
+{symbol}
 
 Live market scan:
-{scan}
+{watchlist}
+
+Top 3:
+{top_3}
 
 Rules:
 - Paper trading only.
 - No profit guarantees.
 - Max stop loss is 1% per trade.
-- Use the live scan to choose the best opportunity.
-- Give market-aware guidance.
+- Give smart market-aware guidance.
+- Tell the user what to watch, what to avoid, and what confirms the move.
 
-Return:
+Return in this format:
+
 HERE IS THE MOVE
+
 BEST OPPORTUNITY RIGHT NOW
+
 TOP 3 TO WATCH
+
 NO-TRADE / AVOID LIST
+
 ENTRY TRIGGER
+
 STOP LOSS PLAN
+
 TAKE PROFIT PLAN
+
 WHAT MARKET/NEWS INFO MATTERS
+
 NEXT ACTION
 """
 
     try:
-        return jsonify(ai_router(prompt, "research"))
+        result = ai_router(prompt, "research")
+        return jsonify(result)
     except Exception as e:
-        return jsonify({"answer": f"Smart trading command failed: {e}", "provider": "System"}), 500
+        return jsonify({
+            "answer": f"Smart trading command failed: {e}",
+            "provider": "System"
+        }), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)

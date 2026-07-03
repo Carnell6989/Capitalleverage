@@ -768,6 +768,12 @@ def trading_market_scan():
             "message": str(e)
         }), 500
 
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=9000, debug=True)
+
+# =========================
+# SMART TRADING COMMANDS
+# =========================
 
 @app.route("/trading/smart-command", methods=["POST"])
 def trading_smart_command():
@@ -775,43 +781,47 @@ def trading_smart_command():
     command = data.get("command", "daily")
     symbol = data.get("symbol", "SPY")
 
-    try:
-        scan = trading_market_scan().get_json()
-    except Exception as e:
-        scan = {"watchlist": [], "top_3": [], "message": str(e)}
+    scan = trading_market_scan().get_json()
+    watchlist = scan.get("watchlist", []) if scan else []
+    top_3 = scan.get("top_3", []) if scan else []
 
     prompt = f"""
 You are Capital Leverage Trading Desk.
 
-Selected symbol: {symbol}
-Command: {command}
+This is a PAPER TRADING command center.
+Do not promise profits.
+Risk rule: maximum 1% stop loss per trade.
+
+Command type:
+{command}
+
+Selected symbol:
+{symbol}
 
 Live market scan:
-{scan}
+{watchlist}
 
-Rules:
-- Paper trading only.
-- No profit guarantees.
-- Max stop loss is 1% per trade.
-- Use the live scan to choose the best opportunity.
-- Give market-aware guidance.
+Top 3 from scan:
+{top_3}
+
+Respond like a smart trading desk.
 
 Return:
-HERE IS THE MOVE
-BEST OPPORTUNITY RIGHT NOW
-TOP 3 TO WATCH
-NO-TRADE / AVOID LIST
-ENTRY TRIGGER
-STOP LOSS PLAN
-TAKE PROFIT PLAN
-WHAT MARKET/NEWS INFO MATTERS
-NEXT ACTION
+1. Here is the move
+2. Best opportunity right now
+3. Top 3 names to watch
+4. No-trade / avoid list
+5. Entry trigger
+6. Stop-loss idea using 1% risk
+7. Take-profit zones
+8. What news/web info matters
+9. Next action
 """
 
     try:
         return jsonify(ai_router(prompt, "research"))
     except Exception as e:
-        return jsonify({"answer": f"Smart trading command failed: {e}", "provider": "System"}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=9000, debug=True)
+        return jsonify({
+            "answer": f"Smart trading command failed: {e}",
+            "provider": "System"
+        }), 500

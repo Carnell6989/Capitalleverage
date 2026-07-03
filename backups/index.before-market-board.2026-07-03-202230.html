@@ -579,15 +579,6 @@ cat > templates/index.html <<'EOF'
     </div>
 
     
-
-<div class="panel">
-  <h3>📡 Live Market Board</h3>
-  <p class="small-note">Capital Leverage scans your watchlist, shows price, high, low, change, and signal.</p>
-  <button onclick="loadMarketScan()">🔄 Refresh Market Scan</button>
-  <div id="market-board" class="market-board"></div>
-</div>
-
-
 <div class="panel">
   <h3>📌 Trading Watchlist</h3>
   <p class="small-note">Alpaca Paper supports stocks/crypto/options. Forex pairs like GBPJPY are for OpenAlice research mode unless you connect a forex broker later.</p>
@@ -635,6 +626,12 @@ cat > templates/index.html <<'EOF'
       </div>
 
       <pre id="trading-answer"></pre>
+    </div>
+
+    <div class="panel">
+      <h3>📊 Trade Performance Chart</h3>
+      <p class="small-note">This starts as a demo chart. Later we can connect it to OpenAlice or Alpaca paper trading logs.</p>
+      <canvas id="trade-chart" height="180"></canvas>
     </div>
   </div>
 </section>
