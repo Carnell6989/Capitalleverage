@@ -19,15 +19,13 @@ if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
     else:
-        flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
-        creds = flow.run_local_server(
-            host="2-25-172-65.sslip.io",
-            bind_addr="0.0.0.0",
-            port=8080,
-            open_browser=False
-        )
+        flow = InstalledAppFlow.from_client_secrets_file(
+            'credentials.json', SCOPES)
 
-    with open("token.pickle", "wb") as token:
+        # This version works on VPS (no browser needed)
+        creds = flow.run_console()
+
+    with open('token.pickle', 'wb') as token:
         pickle.dump(creds, token)
 
-print("Gmail connected successfully.")
+print("✅ token.pickle created successfully!")

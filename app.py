@@ -501,3 +501,69 @@ Reminder: Capital Leverage is not a law firm and the user must verify court rule
 """
     return jsonify(ai_router(prompt, mode))
 
+
+import base64, pickle
+from email.mime.text import MIMEText
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+
+GMAIL_SCOPES = [
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.readonly"
+]
+
+@app.route("/gmail/connect")
+def gmail_connect():
+    flow = Flow.from_client_secrets_file(
+        "credentials.json",
+        scopes=GMAIL_SCOPES,
+        redirect_uri="https://capitalleverage-1.onrender.com/gmail/callback"
+    )
+    auth_url, _ = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent"
+    )
+    return redirect(auth_url)
+
+@app.route("/gmail/callback")
+def gmail_callback():
+    flow = Flow.from_client_secrets_file(
+        "credentials.json",
+        scopes=GMAIL_SCOPES,
+        redirect_uri="https://capitalleverage-1.onrender.com/gmail/callback"
+    )
+    flow.fetch_token(authorization_response=request.url)
+
+    creds = flow.credentials
+    with open("gmail_token.pickle", "wb") as token:
+        pickle.dump(creds, token)
+
+    return "Gmail connected successfully. You can close this page."
+
+@app.route("/gmail/send", methods=["POST"])
+def gmail_send():
+    data = request.json
+    to = data.get("to")
+    subject = data.get("subject")
+    body = data.get("body")
+
+    if not to or not subject or not body:
+        return jsonify({"success": False, "message": "Missing to, subject, or body"}), 400
+
+    if not os.path.exists("gmail_token.pickle"):
+        return jsonify({"success": False, "message": "Gmail not connected yet. Go to /gmail/connect first."}), 400
+
+    with open("gmail_token.pickle", "rb") as token:
+        creds = pickle.load(token)
+
+    service = build("gmail", "v1", credentials=creds)
+
+    msg = MIMEText(body)
+    msg["to"] = to
+    msg["subject"] = subject
+
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+    sent = service.users().messages().send(userId="me", body={"raw": raw}).execute()
+
+    return jsonify({"success": True, "message": "Email sent.", "id": sent.get("id")})

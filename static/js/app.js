@@ -748,3 +748,39 @@ async function runMyCaseTask(taskName) {
   const data = await res.json();
   out.innerText = data.answer || "No task response returned.";
 }
+
+async function draftEmailWithAI() {
+  const to = document.getElementById("draft-email-to").value;
+  const subject = document.getElementById("draft-email-subject").value;
+  const context = document.getElementById("draft-email-context").value;
+  const out = document.getElementById("draft-email-output");
+
+  if (!context.trim()) {
+    out.innerText = "Tell me what the email should say first.";
+    return;
+  }
+
+  out.innerText = "Drafting email...";
+
+  const res = await fetch("/ask", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      mode: "email",
+      message: `Draft a professional email.
+
+To: ${to}
+Subject: ${subject}
+
+Context:
+${context}
+
+Return only:
+Subject line:
+Email body:`
+    })
+  });
+
+  const data = await res.json();
+  out.innerText = data.answer || "No draft returned.";
+}

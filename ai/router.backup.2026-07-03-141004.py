@@ -216,7 +216,6 @@ Do not send anything automatically.
     }
     return agents.get(mode, "")
 
-
 def ai_router(message, mode="fast"):
     errors = []
 
@@ -224,33 +223,23 @@ def ai_router(message, mode="fast"):
 
     research = ""
     try:
-        research = web_research(message, max_results=5)
+        research = web_research(message, max_results=4)
     except Exception as e:
         research = f"Web research unavailable: {e}"
 
     message = f"""
-{agent if agent else "You are Capital Leverage AI."}
-
-Use live web research in every answer when relevant.
-If web research is weak, missing, or uncertain, say that clearly.
-Do not invent cases, statutes, facts, deadlines, or citations.
-
-LIVE WEB RESEARCH:
+Capital Leverage live web research:
 {research}
 
-USER REQUEST:
+User request:
 {message}
-
-Return a clear Capital Leverage answer with:
-1. Direct answer
-2. What the web/research says
-3. Practical leverage points
-4. Next steps
-5. Sources/URLs if available
 """
 
+    if agent:
+        message = agent + "\n\n" + message
+
     if mode == "document":
-        order = [("Gemini", ask_gemini), ("OpenRouter", ask_openrouter), ("Groq", ask_groq)]
+        order = [("Gemini", ask_gemini), ("Groq", ask_groq), ("OpenRouter", ask_openrouter)]
     elif mode == "research":
         order = [("OpenRouter", ask_openrouter), ("Gemini", ask_gemini), ("Groq", ask_groq)]
     elif mode == "backup":
@@ -258,9 +247,9 @@ Return a clear Capital Leverage answer with:
     elif mode == "local":
         order = [("Ollama", ask_ollama)]
     elif mode in ["legal", "credit", "housing", "business", "email"]:
-        order = [("OpenRouter", ask_openrouter), ("Gemini", ask_gemini), ("Groq", ask_groq)]
+        order = [("Gemini", ask_gemini), ("OpenRouter", ask_openrouter), ("Groq", ask_groq)]
     else:
-        order = [("OpenRouter", ask_openrouter), ("Gemini", ask_gemini), ("Groq", ask_groq)]
+        order = [("Groq", ask_groq), ("Gemini", ask_gemini), ("OpenRouter", ask_openrouter)]
 
     for provider, fn in order:
         try:

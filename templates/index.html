@@ -250,6 +250,15 @@ cat > templates/index.html <<'EOF'
 
   <div class="panel">
     <h3>Email Intelligence</h3>
+    <div id="email-draft-workspace" class="panel">
+      <h3>Draft Email</h3>
+      <input id="draft-email-to" placeholder="To email address">
+      <input id="draft-email-subject" placeholder="Subject">
+      <textarea id="draft-email-context" placeholder="What do you want to say?"></textarea>
+      <button onclick="draftEmailWithAI()">Draft Email</button>
+      <button onclick="copyTextById('draft-email-output')">Copy Draft</button>
+      <pre id="draft-email-output"></pre>
+    </div>
     <input id="email-sender" placeholder="From / sender email">
     <input id="email-subject" placeholder="Email subject">
     <textarea id="email-body" placeholder="Paste the email here..."></textarea>
