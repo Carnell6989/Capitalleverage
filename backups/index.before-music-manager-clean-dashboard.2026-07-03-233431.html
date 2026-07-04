@@ -242,29 +242,6 @@ cat > templates/index.html <<'EOF'
 
 
 <section id="musicmanager" class="page">
-  <div class="panel music-manager-screen">
-    <h3>📊 Artist Growth Dashboard</h3>
-    <p class="small-note">Your manager screen: views, likes, comments, followers, campaigns, and what needs action now.</p>
-
-    <div class="music-metric-grid">
-      <div class="music-metric-card"><h4>Total Views</h4><strong id="music-total-views">0</strong><span>Across platforms</span></div>
-      <div class="music-metric-card"><h4>Likes</h4><strong id="music-total-likes">0</strong><span>Engagement</span></div>
-      <div class="music-metric-card"><h4>Comments</h4><strong id="music-total-comments">0</strong><span>Community activity</span></div>
-      <div class="music-metric-card"><h4>Followers</h4><strong id="music-total-followers">0</strong><span>Audience growth</span></div>
-      <div class="music-metric-card"><h4>Active Campaigns</h4><strong id="music-active-campaigns">0</strong><span>Promo running</span></div>
-      <div class="music-metric-card"><h4>Manager Alert</h4><strong id="music-manager-alert">Ready</strong><span>Needs action</span></div>
-    </div>
-
-    <div class="music-platform-grid">
-      <button onclick="musicManagerAgent('post_youtube')">▶️ Post to YouTube Plan</button>
-      <button onclick="musicManagerAgent('post_tiktok')">🎵 Post to TikTok Plan</button>
-      <button onclick="musicManagerAgent('make_10_videos')">🎬 Make 10 Video Ideas</button>
-      <button onclick="musicManagerAgent('titles')">🏷️ Generate Titles</button>
-      <button onclick="musicManagerAgent('captions_hashtags')">✍️ Captions + Hashtags</button>
-      <button onclick="musicManagerAgent('manager_today')">🧠 What Should I Do Today?</button>
-    </div>
-  </div>
-
   <div class="hero">
     <h2>🎵 Music Manager OS</h2>
     <p>A smart artist manager, campaign system, content planner, tracking dashboard, and client portal for independent artists.</p>
@@ -332,6 +309,34 @@ cat > templates/index.html <<'EOF'
     </div>
 
     <pre id="music-dashboard-answer"></pre>
+  </div>
+
+
+
+  <div class="panel">
+    <h3>🎵 Music Manager OS</h3>
+    <p class="small-note">
+      A smart artist-growth system for independent artists. It works like a manager,
+      tracker, campaign tool, and client portal all in one.
+    </p>
+
+    <div class="business-chip-grid">
+      <button onclick="musicManagerTask('manager')">🧠 Manager View</button>
+      <button onclick="musicManagerTask('tracker')">📊 Tracker</button>
+      <button onclick="musicManagerTask('campaign')">🚀 Campaign Tool</button>
+      <button onclick="musicManagerTask('portal')">👤 Client Portal</button>
+      <button onclick="musicManagerTask('admin')">👑 Admin Dashboard</button>
+      <button onclick="musicManagerTask('build')">🛠️ Build Plan</button>
+    </div>
+
+    <textarea id="music-manager-input" placeholder="Example: Build me the first version of Music Manager OS for independent artists. I want manager tasks, campaigns, artist logins, tracking links, and admin control."></textarea>
+
+    <div class="command-buttons">
+      <button onclick="askMusicManager()">Ask Music Manager Agent</button>
+      <button onclick="copyTextById('music-manager-answer')">Copy</button>
+    </div>
+
+    <pre id="music-manager-answer"></pre>
   </div>
 
 

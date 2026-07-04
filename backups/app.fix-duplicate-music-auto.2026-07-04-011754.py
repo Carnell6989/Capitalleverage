@@ -1,8 +1,6 @@
-from flask import Flask, render_template, request, jsonify, redirect, session, session, redirect
+from flask import Flask, render_template, request, jsonify
 from ai.router import ai_router
 import json
-import os
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 from pathlib import Path
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -10,7 +8,6 @@ import fitz
 import docx
 
 app = Flask(__name__)
-app.secret_key = "capital-leverage-dev-secret-change-later"
 
 DATA_DIR = Path("data")
 UPLOAD_DIR = Path("uploads")
@@ -1383,12 +1380,6 @@ Return:
 
 MUSIC_AUTOMATION_FILE = DATA_DIR / "music_automation_tasks.json"
 
-# =========================
-# MUSIC MANAGER AUTO CAMPAIGN AGENT
-# =========================
-
-MUSIC_AUTOMATION_FILE = DATA_DIR / "music_automation_tasks.json"
-
 @app.route("/music/auto-campaign", methods=["POST"])
 def music_auto_campaign():
     data = request.get_json(silent=True) or {}
@@ -1403,13 +1394,15 @@ def music_auto_campaign():
 You are Music Manager OS inside Capital Leverage.
 
 You are the artist's campaign manager.
-Your job is to automatically build the full campaign like a real manager.
+Your job is to automatically build the full campaign.
 
 Artist: {artist}
 Genre: {genre}
 Song/project: {song}
 Goal: {goal}
 Platforms: {platforms}
+
+Create a real campaign execution plan.
 
 Return:
 1. HERE IS THE MOVE
@@ -1457,80 +1450,82 @@ Return:
 @app.route("/music/automation-tasks", methods=["GET"])
 def music_automation_tasks():
     return jsonify(load_json(MUSIC_AUTOMATION_FILE))
-
 # =========================
-# YOUTUBE OAUTH CONNECTION
+# MUSIC MANAGER AUTO CAMPAIGN AGENT
 # =========================
 
-YOUTUBE_CLIENT_SECRET_FILE = "google_client_secret.json"
-YOUTUBE_TOKEN_FILE = DATA_DIR / "youtube_token.json"
+MUSIC_AUTOMATION_FILE = DATA_DIR / "music_automation_tasks.json"
 
-YOUTUBE_SCOPES = [
-    "https://www.googleapis.com/auth/youtube.upload",
-    "https://www.googleapis.com/auth/youtube.readonly"
-]
+@app.route("/music/auto-campaign", methods=["POST"])
+def music_auto_campaign():
+    data = request.get_json(silent=True) or {}
 
-def youtube_redirect_uri():
-    return "http://2-25-172-65.sslip.io:9000/youtube/oauth2callback"
+    artist = data.get("artist", "")
+    genre = data.get("genre", "")
+    song = data.get("song", "")
+    goal = data.get("goal", "Grow views, engagement, followers, and campaign momentum.")
+    platforms = data.get("platforms", "YouTube Shorts, TikTok, Instagram Reels")
 
-@app.route("/youtube/connect", methods=["GET"])
-def youtube_connect():
-    from google_auth_oauthlib.flow import Flow
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
 
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=True
-    )
+You are the artist's campaign manager.
+Your job is to automatically build the full campaign.
 
-    auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
-    )
+Artist: {artist}
+Genre: {genre}
+Song/project: {song}
+Goal: {goal}
+Platforms: {platforms}
 
-    session["youtube_oauth_state"] = state
-    session["youtube_code_verifier"] = flow.code_verifier
+Create a real campaign execution plan.
 
-    return redirect(auth_url)
+Return:
+1. HERE IS THE MOVE
+2. Campaign Name
+3. 7-Day Campaign Schedule
+4. 10 Video Ideas
+5. 10 Titles
+6. 10 Captions
+7. Hashtag Sets
+8. Posting Times
+9. YouTube Shorts Plan
+10. TikTok Plan
+11. Repost Strategy
+12. Fan Engagement Tasks
+13. Daily Checklist
+14. What the agent should do next automatically
+"""
 
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
 
-@app.route("/youtube/oauth2callback", methods=["GET"])
-def youtube_oauth2callback():
-    from google_auth_oauthlib.flow import Flow
+    task = {
+        "id": str(int(datetime.now().timestamp())),
+        "artist": artist,
+        "genre": genre,
+        "song": song,
+        "goal": goal,
+        "platforms": platforms,
+        "status": "Campaign Plan Built",
+        "campaign_output": answer,
+        "created_at": datetime.now().isoformat()
+    }
 
-    state = session.get("youtube_oauth_state")
-    code_verifier = session.get("youtube_code_verifier")
+    tasks = load_json(MUSIC_AUTOMATION_FILE)
+    tasks.append(task)
+    save_json(MUSIC_AUTOMATION_FILE, tasks)
 
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        state=state,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=False
-    )
-
-    flow.code_verifier = code_verifier
-
-    flow.fetch_token(authorization_response=request.url)
-    creds = flow.credentials
-    YOUTUBE_TOKEN_FILE.write_text(creds.to_json())
-
-    return """
-    <h2>YouTube connected to Capital Leverage.</h2>
-    <p>You can close this tab and go back to Music Manager OS.</p>
-    """
-
-
-@app.route("/youtube/status", methods=["GET"])
-def youtube_status():
-    connected = YOUTUBE_TOKEN_FILE.exists()
     return jsonify({
         "success": True,
-        "connected": connected,
-        "message": "YouTube is connected." if connected else "YouTube is not connected yet."
+        "message": "Music Manager Agent built the campaign.",
+        "task": task,
+        "answer": answer
     })
+
+@app.route("/music/automation-tasks", methods=["GET"])
+def music_automation_tasks():
+    return jsonify(load_json(MUSIC_AUTOMATION_FILE))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)

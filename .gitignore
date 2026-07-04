@@ -13,3 +13,12 @@ token.json
 .env.*
 *.env
 *.env.*
+google_client_secret.json
+
+# OAuth / secrets
+google_client_secret.json
+data/youtube_token.json
+.env
+.env.*
+*.env
+*.env.*

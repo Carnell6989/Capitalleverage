@@ -1,8 +1,6 @@
-from flask import Flask, render_template, request, jsonify, redirect, session, session, redirect
+from flask import Flask, render_template, request, jsonify
 from ai.router import ai_router
 import json
-import os
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 from pathlib import Path
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -10,7 +8,6 @@ import fitz
 import docx
 
 app = Flask(__name__)
-app.secret_key = "capital-leverage-dev-secret-change-later"
 
 DATA_DIR = Path("data")
 UPLOAD_DIR = Path("uploads")
@@ -1311,7 +1308,6 @@ def music_links():
     save_json(MUSIC_LINKS_FILE, links)
     return jsonify(link)
 
-
 @app.route("/music/manager-agent", methods=["POST"])
 def music_manager_agent():
     data = request.get_json(silent=True) or {}
@@ -1327,16 +1323,8 @@ def music_manager_agent():
     prompt = f"""
 You are Music Manager OS inside Capital Leverage.
 
-You are not a normal chatbot.
-You are the artist's manager.
-
-Your job:
-- Tell the artist exactly what to do today.
-- Build campaigns.
-- Write titles, captions, hashtags, and posting plans.
-- Create video ideas.
-- Help the artist become known.
-- Think like a real manager trying to grow views, fans, comments, and momentum.
+You act like a real manager for independent artists.
+You do not just show analytics. You tell the artist what to do next.
 
 Task:
 {task}
@@ -1347,7 +1335,7 @@ Artist:
 Genre:
 {genre}
 
-Details:
+User details:
 {details}
 
 Saved artists:
@@ -1356,181 +1344,22 @@ Saved artists:
 Saved campaigns:
 {campaigns}
 
-Saved links:
+Saved tracking links:
 {links}
 
-Response style:
-Start with: HERE IS THE MOVE.
-Be confident.
-Give direct steps.
-Do not sound generic.
-
 Return:
-1. HERE IS THE MOVE
-2. What to post today
-3. 10 content/video ideas if relevant
-4. Titles/captions/hashtags if relevant
-5. YouTube/TikTok plan
-6. Campaign move
-7. What needs attention
-8. Next 3 actions
+1. Today's Manager View
+2. Exact tasks for the artist
+3. Campaign recommendation
+4. YouTube plan
+5. TikTok plan
+6. Caption/hashtag ideas
+7. Tracking plan
+8. What needs attention
+9. Next 3 actions
 """
 
     return jsonify(ai_router(prompt, "business"))
-# =========================
-# MUSIC MANAGER AUTO CAMPAIGN AGENT
-# =========================
-
-MUSIC_AUTOMATION_FILE = DATA_DIR / "music_automation_tasks.json"
-
-# =========================
-# MUSIC MANAGER AUTO CAMPAIGN AGENT
-# =========================
-
-MUSIC_AUTOMATION_FILE = DATA_DIR / "music_automation_tasks.json"
-
-@app.route("/music/auto-campaign", methods=["POST"])
-def music_auto_campaign():
-    data = request.get_json(silent=True) or {}
-
-    artist = data.get("artist", "")
-    genre = data.get("genre", "")
-    song = data.get("song", "")
-    goal = data.get("goal", "Grow views, engagement, followers, and campaign momentum.")
-    platforms = data.get("platforms", "YouTube Shorts, TikTok, Instagram Reels")
-
-    prompt = f"""
-You are Music Manager OS inside Capital Leverage.
-
-You are the artist's campaign manager.
-Your job is to automatically build the full campaign like a real manager.
-
-Artist: {artist}
-Genre: {genre}
-Song/project: {song}
-Goal: {goal}
-Platforms: {platforms}
-
-Return:
-1. HERE IS THE MOVE
-2. Campaign Name
-3. 7-Day Campaign Schedule
-4. 10 Video Ideas
-5. 10 Titles
-6. 10 Captions
-7. Hashtag Sets
-8. Posting Times
-9. YouTube Shorts Plan
-10. TikTok Plan
-11. Repost Strategy
-12. Fan Engagement Tasks
-13. Daily Checklist
-14. What the agent should do next automatically
-"""
-
-    result = ai_router(prompt, "business")
-    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
-
-    task = {
-        "id": str(int(datetime.now().timestamp())),
-        "artist": artist,
-        "genre": genre,
-        "song": song,
-        "goal": goal,
-        "platforms": platforms,
-        "status": "Campaign Plan Built",
-        "campaign_output": answer,
-        "created_at": datetime.now().isoformat()
-    }
-
-    tasks = load_json(MUSIC_AUTOMATION_FILE)
-    tasks.append(task)
-    save_json(MUSIC_AUTOMATION_FILE, tasks)
-
-    return jsonify({
-        "success": True,
-        "message": "Music Manager Agent built the campaign.",
-        "task": task,
-        "answer": answer
-    })
-
-@app.route("/music/automation-tasks", methods=["GET"])
-def music_automation_tasks():
-    return jsonify(load_json(MUSIC_AUTOMATION_FILE))
-
-# =========================
-# YOUTUBE OAUTH CONNECTION
-# =========================
-
-YOUTUBE_CLIENT_SECRET_FILE = "google_client_secret.json"
-YOUTUBE_TOKEN_FILE = DATA_DIR / "youtube_token.json"
-
-YOUTUBE_SCOPES = [
-    "https://www.googleapis.com/auth/youtube.upload",
-    "https://www.googleapis.com/auth/youtube.readonly"
-]
-
-def youtube_redirect_uri():
-    return "http://2-25-172-65.sslip.io:9000/youtube/oauth2callback"
-
-@app.route("/youtube/connect", methods=["GET"])
-def youtube_connect():
-    from google_auth_oauthlib.flow import Flow
-
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=True
-    )
-
-    auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
-    )
-
-    session["youtube_oauth_state"] = state
-    session["youtube_code_verifier"] = flow.code_verifier
-
-    return redirect(auth_url)
-
-
-@app.route("/youtube/oauth2callback", methods=["GET"])
-def youtube_oauth2callback():
-    from google_auth_oauthlib.flow import Flow
-
-    state = session.get("youtube_oauth_state")
-    code_verifier = session.get("youtube_code_verifier")
-
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        state=state,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=False
-    )
-
-    flow.code_verifier = code_verifier
-
-    flow.fetch_token(authorization_response=request.url)
-    creds = flow.credentials
-    YOUTUBE_TOKEN_FILE.write_text(creds.to_json())
-
-    return """
-    <h2>YouTube connected to Capital Leverage.</h2>
-    <p>You can close this tab and go back to Music Manager OS.</p>
-    """
-
-
-@app.route("/youtube/status", methods=["GET"])
-def youtube_status():
-    connected = YOUTUBE_TOKEN_FILE.exists()
-    return jsonify({
-        "success": True,
-        "connected": connected,
-        "message": "YouTube is connected." if connected else "YouTube is not connected yet."
-    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)
