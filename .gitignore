@@ -22,3 +22,10 @@ data/youtube_token.json
 .env.*
 *.env
 *.env.*
+
+# local secrets
+.env
+google_client_secret.json
+data/youtube_token.json
+data/youtube_oauth_state.json
+.env.backup*

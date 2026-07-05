@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, session, redirect
+from flask import Flask, render_template, request, jsonify, redirect, session, session, redirect
 from ai.router import ai_router
 import json
 import os
@@ -1462,6 +1462,80 @@ def music_automation_tasks():
 # YOUTUBE OAUTH CONNECTION
 # =========================
 
+YOUTUBE_CLIENT_SECRET_FILE = "google_client_secret.json"
+YOUTUBE_TOKEN_FILE = DATA_DIR / "youtube_token.json"
+
+YOUTUBE_SCOPES = [
+    "https://www.googleapis.com/auth/youtube.upload",
+    "https://www.googleapis.com/auth/youtube.readonly"
+]
+
+def youtube_redirect_uri():
+    return "http://2-25-172-65.sslip.io:9000/youtube/oauth2callback"
+
+@app.route("/youtube/connect", methods=["GET"])
+def youtube_connect():
+    from google_auth_oauthlib.flow import Flow
+
+    flow = Flow.from_client_secrets_file(
+        YOUTUBE_CLIENT_SECRET_FILE,
+        scopes=YOUTUBE_SCOPES,
+        redirect_uri=youtube_redirect_uri(),
+        autogenerate_code_verifier=True
+    )
+
+    auth_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent"
+    )
+
+    session["youtube_oauth_state"] = state
+    session["youtube_code_verifier"] = flow.code_verifier
+
+    return redirect(auth_url)
+
+
+@app.route("/youtube/oauth2callback", methods=["GET"])
+def youtube_oauth2callback():
+    from google_auth_oauthlib.flow import Flow
+
+    state = session.get("youtube_oauth_state")
+    code_verifier = session.get("youtube_code_verifier")
+
+    flow = Flow.from_client_secrets_file(
+        YOUTUBE_CLIENT_SECRET_FILE,
+        scopes=YOUTUBE_SCOPES,
+        state=state,
+        redirect_uri=youtube_redirect_uri(),
+        autogenerate_code_verifier=False
+    )
+
+    flow.code_verifier = code_verifier
+
+    flow.fetch_token(authorization_response=request.url)
+    creds = flow.credentials
+
+    artist_id = session.get("youtube_artist_id")
+    if artist_id:
+        artist_youtube_token_file(artist_id).write_text(creds.to_json())
+    else:
+        YOUTUBE_TOKEN_FILE.write_text(creds.to_json())
+
+    return """
+    <h2>YouTube connected to Capital Leverage.</h2>
+    <p>You can close this tab and go back to Music Manager OS.</p>
+    """
+
+
+@app.route("/youtube/status", methods=["GET"])
+def youtube_status():
+    connected = YOUTUBE_TOKEN_FILE.exists()
+    return jsonify({
+        "success": True,
+        "connected": connected,
+        "message": "YouTube is connected." if connected else "YouTube is not connected yet."
+    })
 # =========================
 # YOUTUBE CHANNEL SYNC
 # =========================
@@ -1727,83 +1801,6 @@ def music_artist_youtube_videos(artist_id):
         "artist_id": artist_id,
         "videos": videos
     })
-
-# =========================
-# YOUTUBE OAUTH CONNECTION - FILE STATE FIX
-# =========================
-
-YOUTUBE_CLIENT_SECRET_FILE = "google_client_secret.json"
-YOUTUBE_TOKEN_FILE = DATA_DIR / "youtube_token.json"
-YOUTUBE_OAUTH_STATE_FILE = DATA_DIR / "youtube_oauth_state.json"
-
-YOUTUBE_SCOPES = [
-    "https://www.googleapis.com/auth/youtube.upload",
-    "https://www.googleapis.com/auth/youtube.readonly"
-]
-
-def youtube_redirect_uri():
-    return "http://2-25-172-65.sslip.io:9000/youtube/oauth2callback"
-
-@app.route("/youtube/connect", methods=["GET"])
-def youtube_connect():
-    from google_auth_oauthlib.flow import Flow
-
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=True
-    )
-
-    auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
-    )
-
-    YOUTUBE_OAUTH_STATE_FILE.write_text(json.dumps({
-        "state": state,
-        "code_verifier": flow.code_verifier
-    }))
-
-    return redirect(auth_url)
-
-@app.route("/youtube/oauth2callback", methods=["GET"])
-def youtube_oauth2callback():
-    from google_auth_oauthlib.flow import Flow
-
-    saved = json.loads(YOUTUBE_OAUTH_STATE_FILE.read_text()) if YOUTUBE_OAUTH_STATE_FILE.exists() else {}
-    state = saved.get("state")
-    code_verifier = saved.get("code_verifier")
-
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        state=state,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=False
-    )
-
-    flow.code_verifier = code_verifier
-    flow.fetch_token(authorization_response=request.url)
-
-    creds = flow.credentials
-    YOUTUBE_TOKEN_FILE.write_text(creds.to_json())
-
-    return """
-    <h2>YouTube connected to Capital Leverage.</h2>
-    <p>You can close this tab and go back to Music Manager OS.</p>
-    """
-
-@app.route("/youtube/status", methods=["GET"])
-def youtube_status():
-    connected = YOUTUBE_TOKEN_FILE.exists()
-    return jsonify({
-        "success": True,
-        "connected": connected,
-        "message": "YouTube is connected." if connected else "YouTube is not connected yet."
-    })
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)

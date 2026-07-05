@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, session, redirect
+from flask import Flask, render_template, request, jsonify, redirect, session, session, redirect
 from ai.router import ai_router
 import json
 import os
@@ -1462,279 +1462,8 @@ def music_automation_tasks():
 # YOUTUBE OAUTH CONNECTION
 # =========================
 
-# =========================
-# YOUTUBE CHANNEL SYNC
-# =========================
-
-def get_youtube_service():
-    from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build
-
-    if not YOUTUBE_TOKEN_FILE.exists():
-        return None
-
-    creds = Credentials.from_authorized_user_file(str(YOUTUBE_TOKEN_FILE), YOUTUBE_SCOPES)
-    return build("youtube", "v3", credentials=creds)
-
-@app.route("/youtube/channel", methods=["GET"])
-def youtube_channel():
-    service = get_youtube_service()
-
-    if not service:
-        return jsonify({
-            "success": False,
-            "connected": False,
-            "message": "No YouTube channel connected."
-        }), 400
-
-    res = service.channels().list(
-        part="snippet,statistics,contentDetails",
-        mine=True
-    ).execute()
-
-    items = res.get("items", [])
-
-    if not items:
-        return jsonify({
-            "success": False,
-            "connected": True,
-            "message": "Connected, but no YouTube channel found."
-        }), 404
-
-    ch = items[0]
-
-    return jsonify({
-        "success": True,
-        "connected": True,
-        "channel": {
-            "id": ch.get("id"),
-            "title": ch.get("snippet", {}).get("title"),
-            "description": ch.get("snippet", {}).get("description"),
-            "custom_url": ch.get("snippet", {}).get("customUrl"),
-            "published_at": ch.get("snippet", {}).get("publishedAt"),
-            "thumbnail": ch.get("snippet", {}).get("thumbnails", {}).get("default", {}).get("url"),
-            "statistics": ch.get("statistics", {}),
-            "uploads_playlist": ch.get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads")
-        }
-    })
-
-@app.route("/youtube/videos", methods=["GET"])
-def youtube_videos():
-    service = get_youtube_service()
-
-    if not service:
-        return jsonify({
-            "success": False,
-            "connected": False,
-            "message": "No YouTube channel connected."
-        }), 400
-
-    ch_res = service.channels().list(
-        part="contentDetails",
-        mine=True
-    ).execute()
-
-    items = ch_res.get("items", [])
-    if not items:
-        return jsonify({"success": False, "message": "No channel found."}), 404
-
-    uploads_playlist = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
-
-    pl_res = service.playlistItems().list(
-        part="snippet,contentDetails",
-        playlistId=uploads_playlist,
-        maxResults=12
-    ).execute()
-
-    videos = []
-    video_ids = []
-
-    for item in pl_res.get("items", []):
-        vid = item.get("contentDetails", {}).get("videoId")
-        if vid:
-            video_ids.append(vid)
-            videos.append({
-                "id": vid,
-                "title": item.get("snippet", {}).get("title"),
-                "description": item.get("snippet", {}).get("description"),
-                "published_at": item.get("snippet", {}).get("publishedAt"),
-                "thumbnail": item.get("snippet", {}).get("thumbnails", {}).get("medium", {}).get("url")
-            })
-
-    stats_map = {}
-    if video_ids:
-        stats_res = service.videos().list(
-            part="statistics,snippet",
-            id=",".join(video_ids)
-        ).execute()
-
-        for v in stats_res.get("items", []):
-            stats_map[v.get("id")] = v.get("statistics", {})
-
-    for v in videos:
-        v["statistics"] = stats_map.get(v["id"], {})
-
-    return jsonify({
-        "success": True,
-        "connected": True,
-        "videos": videos
-    })
-
-
-# =========================
-# MULTI-ARTIST YOUTUBE CONNECTION
-# =========================
-
-MUSIC_YT_TOKEN_DIR = DATA_DIR / "music_manager" / "youtube_tokens"
-MUSIC_YT_TOKEN_DIR.mkdir(parents=True, exist_ok=True)
-
-def artist_youtube_token_file(artist_id):
-    safe_id = secure_filename(str(artist_id))
-    return MUSIC_YT_TOKEN_DIR / f"{safe_id}.json"
-
-def get_youtube_service_for_artist(artist_id):
-    from google.oauth2.credentials import Credentials
-    from googleapiclient.discovery import build
-
-    token_file = artist_youtube_token_file(artist_id)
-    if not token_file.exists():
-        return None
-
-    creds = Credentials.from_authorized_user_file(str(token_file), YOUTUBE_SCOPES)
-    return build("youtube", "v3", credentials=creds)
-
-@app.route("/music/<artist_id>/youtube/connect", methods=["GET"])
-def music_artist_youtube_connect(artist_id):
-    from google_auth_oauthlib.flow import Flow
-
-    flow = Flow.from_client_secrets_file(
-        YOUTUBE_CLIENT_SECRET_FILE,
-        scopes=YOUTUBE_SCOPES,
-        redirect_uri=youtube_redirect_uri(),
-        autogenerate_code_verifier=True
-    )
-
-    auth_url, state = flow.authorization_url(
-        access_type="offline",
-        include_granted_scopes="true",
-        prompt="consent"
-    )
-
-    session["youtube_oauth_state"] = state
-    session["youtube_code_verifier"] = flow.code_verifier
-    session["youtube_artist_id"] = artist_id
-
-    return redirect(auth_url)
-
-@app.route("/music/<artist_id>/youtube/status", methods=["GET"])
-def music_artist_youtube_status(artist_id):
-    token_file = artist_youtube_token_file(artist_id)
-    return jsonify({
-        "success": True,
-        "artist_id": artist_id,
-        "connected": token_file.exists()
-    })
-
-@app.route("/music/<artist_id>/youtube/channel", methods=["GET"])
-def music_artist_youtube_channel(artist_id):
-    service = get_youtube_service_for_artist(artist_id)
-
-    if not service:
-        return jsonify({
-            "success": False,
-            "connected": False,
-            "message": "No YouTube connected for this artist."
-        }), 400
-
-    res = service.channels().list(
-        part="snippet,statistics,contentDetails",
-        mine=True
-    ).execute()
-
-    items = res.get("items", [])
-    if not items:
-        return jsonify({"success": False, "message": "No channel found."}), 404
-
-    ch = items[0]
-
-    return jsonify({
-        "success": True,
-        "artist_id": artist_id,
-        "channel": {
-            "id": ch.get("id"),
-            "title": ch.get("snippet", {}).get("title"),
-            "description": ch.get("snippet", {}).get("description"),
-            "thumbnail": ch.get("snippet", {}).get("thumbnails", {}).get("default", {}).get("url"),
-            "statistics": ch.get("statistics", {}),
-            "uploads_playlist": ch.get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads")
-        }
-    })
-
-@app.route("/music/<artist_id>/youtube/videos", methods=["GET"])
-def music_artist_youtube_videos(artist_id):
-    service = get_youtube_service_for_artist(artist_id)
-
-    if not service:
-        return jsonify({
-            "success": False,
-            "connected": False,
-            "message": "No YouTube connected for this artist."
-        }), 400
-
-    ch_res = service.channels().list(part="contentDetails", mine=True).execute()
-    items = ch_res.get("items", [])
-
-    if not items:
-        return jsonify({"success": False, "message": "No channel found."}), 404
-
-    uploads_playlist = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
-
-    pl_res = service.playlistItems().list(
-        part="snippet,contentDetails",
-        playlistId=uploads_playlist,
-        maxResults=12
-    ).execute()
-
-    videos = []
-    video_ids = []
-
-    for item in pl_res.get("items", []):
-        vid = item.get("contentDetails", {}).get("videoId")
-        if vid:
-            video_ids.append(vid)
-            videos.append({
-                "id": vid,
-                "title": item.get("snippet", {}).get("title"),
-                "description": item.get("snippet", {}).get("description"),
-                "published_at": item.get("snippet", {}).get("publishedAt"),
-                "thumbnail": item.get("snippet", {}).get("thumbnails", {}).get("medium", {}).get("url")
-            })
-
-    stats_map = {}
-    if video_ids:
-        stats_res = service.videos().list(
-            part="statistics",
-            id=",".join(video_ids)
-        ).execute()
-        for v in stats_res.get("items", []):
-            stats_map[v["id"]] = v.get("statistics", {})
-
-    for v in videos:
-        v["statistics"] = stats_map.get(v["id"], {})
-
-    return jsonify({
-        "success": True,
-        "artist_id": artist_id,
-        "videos": videos
-    })
-
-# =========================
-# YOUTUBE OAUTH CONNECTION - FILE STATE FIX
-# =========================
-
 YOUTUBE_CLIENT_SECRET_FILE = "google_client_secret.json"
 YOUTUBE_TOKEN_FILE = DATA_DIR / "youtube_token.json"
-YOUTUBE_OAUTH_STATE_FILE = DATA_DIR / "youtube_oauth_state.json"
 
 YOUTUBE_SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
@@ -1761,20 +1490,18 @@ def youtube_connect():
         prompt="consent"
     )
 
-    YOUTUBE_OAUTH_STATE_FILE.write_text(json.dumps({
-        "state": state,
-        "code_verifier": flow.code_verifier
-    }))
+    session["youtube_oauth_state"] = state
+    session["youtube_code_verifier"] = flow.code_verifier
 
     return redirect(auth_url)
+
 
 @app.route("/youtube/oauth2callback", methods=["GET"])
 def youtube_oauth2callback():
     from google_auth_oauthlib.flow import Flow
 
-    saved = json.loads(YOUTUBE_OAUTH_STATE_FILE.read_text()) if YOUTUBE_OAUTH_STATE_FILE.exists() else {}
-    state = saved.get("state")
-    code_verifier = saved.get("code_verifier")
+    state = session.get("youtube_oauth_state")
+    code_verifier = session.get("youtube_code_verifier")
 
     flow = Flow.from_client_secrets_file(
         YOUTUBE_CLIENT_SECRET_FILE,
@@ -1785,8 +1512,8 @@ def youtube_oauth2callback():
     )
 
     flow.code_verifier = code_verifier
-    flow.fetch_token(authorization_response=request.url)
 
+    flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials
     YOUTUBE_TOKEN_FILE.write_text(creds.to_json())
 
@@ -1794,6 +1521,7 @@ def youtube_oauth2callback():
     <h2>YouTube connected to Capital Leverage.</h2>
     <p>You can close this tab and go back to Music Manager OS.</p>
     """
+
 
 @app.route("/youtube/status", methods=["GET"])
 def youtube_status():
@@ -1803,7 +1531,6 @@ def youtube_status():
         "connected": connected,
         "message": "YouTube is connected." if connected else "YouTube is not connected yet."
     })
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)

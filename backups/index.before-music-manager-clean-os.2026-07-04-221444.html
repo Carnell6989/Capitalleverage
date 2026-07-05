@@ -241,107 +241,178 @@ cat > templates/index.html <<'EOF'
 
 
 
-
 <section id="musicmanager" class="page">
-  <div class="hero">
-    <h2>🎵 Music Manager OS</h2>
-    <p>Your artist control room: plan content, run campaigns, sync YouTube, track growth, and let the manager agent tell you the next move.</p>
-  </div>
-
-  <div class="panel music-os-topbar">
-    <h3>🎤 Artist Setup</h3>
-    <div class="music-form-grid">
-      <input id="music-artist-name" placeholder="Artist name, example: Wesley Harrison">
-      <input id="music-artist-genre" placeholder="Genre, example: R&B / Rap / Hip-Hop">
-      <input id="music-campaign-title" placeholder="Song / project name">
-      <input id="music-campaign-goal" placeholder="Goal, example: push new single and grow YouTube Shorts">
-    </div>
-    <div class="command-buttons">
-      <button onclick="saveMusicArtist()">Save Artist</button>
-      <button onclick="connectYouTubeGlobal()">▶️ Connect YouTube</button>
-      <button onclick="checkYouTubeGlobal()">🔌 Check YouTube</button>
-      <button onclick="syncYouTubeGlobal()">📺 Sync My YouTube</button>
-    </div>
-  </div>
-
-  <div class="panel music-command-center">
-    <h3>🧠 Artist Command Center</h3>
-    <p class="small-note">This is where the manager tells the artist what to do right now.</p>
-
-    <div class="music-manager-status">
-      <div><strong>Today’s Focus</strong><span id="music-today-focus">Build a plan for the selected artist.</span></div>
-      <div><strong>Best Move</strong><span id="music-best-move">Sync YouTube or generate a campaign.</span></div>
-      <div><strong>Needs Attention</strong><span id="music-needs-attention">No campaign selected yet.</span></div>
-    </div>
-
-    <div class="command-buttons">
-      <button onclick="musicManagerAgent('manager_today')">🧠 Build Today’s Artist Plan</button>
-      <button onclick="musicManagerAgent('make_10_videos')">🎬 Generate 10 Content Ideas</button>
-      <button onclick="musicManagerAgent('captions_hashtags')">✍️ Write Titles + Captions</button>
-      <button onclick="runMusicAutoCampaign()">🤖 Auto Run Campaign</button>
-    </div>
-
-    <textarea id="music-campaign-input" placeholder="Tell the manager what you want. Example: I have a new song dropping Friday. Build me a 7-day YouTube Shorts and TikTok campaign with 10 video ideas, captions, hashtags, and posting schedule."></textarea>
-    <pre id="music-manager-control-answer"></pre>
-  </div>
-
-  <div class="panel music-live-board">
-    <h3>📊 Live Performance Board</h3>
-    <p class="small-note">Once YouTube is synced, this board shows your real channel stats and latest videos.</p>
+  <div class="panel music-manager-screen">
+    <h3>📊 Artist Growth Dashboard</h3>
+    <p class="small-note">Your manager screen: views, likes, comments, followers, campaigns, and what needs action now.</p>
 
     <div class="music-metric-grid">
-      <div class="music-metric-card"><h4>Views</h4><strong id="music-total-views">0</strong><span>Total channel views</span></div>
-      <div class="music-metric-card"><h4>Videos</h4><strong id="music-total-videos">0</strong><span>Uploaded videos</span></div>
-      <div class="music-metric-card"><h4>Subscribers</h4><strong id="music-total-followers">0</strong><span>YouTube subscribers</span></div>
-      <div class="music-metric-card"><h4>Campaigns</h4><strong id="music-active-campaigns">0</strong><span>Saved campaigns</span></div>
+      <div class="music-metric-card"><h4>Total Views</h4><strong id="music-total-views">0</strong><span>Across platforms</span></div>
+      <div class="music-metric-card"><h4>Likes</h4><strong id="music-total-likes">0</strong><span>Engagement</span></div>
+      <div class="music-metric-card"><h4>Comments</h4><strong id="music-total-comments">0</strong><span>Community activity</span></div>
+      <div class="music-metric-card"><h4>Followers</h4><strong id="music-total-followers">0</strong><span>Audience growth</span></div>
+      <div class="music-metric-card"><h4>Active Campaigns</h4><strong id="music-active-campaigns">0</strong><span>Promo running</span></div>
+      <div class="music-metric-card"><h4>Manager Alert</h4><strong id="music-manager-alert">Ready</strong><span>Needs action</span></div>
+    </div>
+
+    <div class="music-platform-grid">
+      <button onclick="musicManagerAgent('post_youtube')">▶️ Post to YouTube Plan</button>
+      <button onclick="musicManagerAgent('post_tiktok')">🎵 Post to TikTok Plan</button>
+      <button onclick="musicManagerAgent('make_10_videos')">🎬 Make 10 Video Ideas</button>
+      <button onclick="musicManagerAgent('titles')">🏷️ Generate Titles</button>
+      <button onclick="musicManagerAgent('captions_hashtags')">✍️ Captions + Hashtags</button>
+      <button onclick="musicManagerAgent('manager_today')">🧠 What Should I Do Today?</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h2>🎵 Music Manager OS</h2>
+    <p>A smart artist manager, campaign system, content planner, tracking dashboard, and client portal for independent artists.</p>
+  </div>
+
+
+
+
+  
+  <div class="panel music-dashboard">
+    <h3>🎛️ Music Manager Dashboard</h3>
+    <p class="small-note">Manage artists, campaigns, genres, content plans, YouTube, TikTok, Google tracking, and AI growth tasks.</p>
+
+    <div class="music-genre-grid">
+      <button onclick="setMusicGenre('R&B')">🎤 R&B</button>
+      <button onclick="setMusicGenre('Hip-Hop')">🎧 Hip-Hop</button>
+      <button onclick="setMusicGenre('Rap')">🔥 Rap</button>
+      <button onclick="setMusicGenre('Trap')">💿 Trap</button>
+      <button onclick="setMusicGenre('Drill')">🥁 Drill</button>
+      <button onclick="setMusicGenre('Pop')">⭐ Pop</button>
+      <button onclick="setMusicGenre('Gospel')">🙏 Gospel</button>
+      <button onclick="setMusicGenre('Afrobeats')">🌍 Afrobeats</button>
+      <button onclick="setMusicGenre('Country Rap')">🤠 Country Rap</button>
+      <button onclick="setMusicGenre('Soul')">🎶 Soul</button>
     </div>
 
     <div class="music-dashboard-grid">
       <div class="music-stat-card">
-        <h4>📺 Connected Channel</h4>
-        <div id="music-youtube-channel">Not synced yet.</div>
+        <h4>Today’s Manager Tasks</h4>
+        <p id="music-task-preview">Pick a genre and build today’s artist growth plan.</p>
       </div>
 
       <div class="music-stat-card">
-        <h4>🔥 Top / Latest Videos</h4>
-        <div id="music-youtube-videos">No videos loaded yet.</div>
+        <h4>Campaign Center</h4>
+        <p>Create promo campaigns, captions, link strategy, and posting plans.</p>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>Platform Connections</h4>
+        <p>YouTube, TikTok, Google/Analytics placeholders ready for API connection.</p>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>Growth Tracker</h4>
+        <p>Track clicks, views, posts, followers, streams, and best-performing content.</p>
       </div>
     </div>
+
+    <div class="music-platform-grid">
+      <button onclick="musicManagerTask('youtube')">▶️ YouTube Plan</button>
+      <button onclick="musicManagerTask('tiktok')">🎵 TikTok Plan</button>
+      <button onclick="musicManagerTask('google')">📈 Google/Analytics Plan</button>
+      <button onclick="musicManagerTask('content')">📅 Content Calendar</button>
+      <button onclick="musicManagerTask('campaign_post')">🚀 Campaign Post</button>
+      <button onclick="musicManagerTask('captions')">✍️ Captions + Hashtags</button>
+      <button onclick="musicManagerTask('video_ideas')">🎬 Video Ideas</button>
+      <button onclick="musicManagerTask('artist_tasks')">🧠 Artist Daily Tasks</button>
+    </div>
+
+    <textarea id="music-campaign-input" placeholder="Example: Build a 7-day TikTok and YouTube Shorts campaign for a Hip-Hop artist pushing a new single. Include captions, hashtags, posting times, video ideas, and tracking plan."></textarea>
+
+    <div class="command-buttons">
+      <button onclick="askMusicManagerDashboard()">Run Music Manager Agent</button>
+      <button onclick="copyTextById('music-dashboard-answer')">Copy</button>
+    </div>
+
+    <pre id="music-dashboard-answer"></pre>
   </div>
 
-  <div class="panel music-content-studio">
-    <h3>🎬 Content Studio</h3>
-    <p class="small-note">Create the content that makes the artist visible.</p>
+
+
+  <div class="panel music-full-system">
+    <h3>🎼 Music Manager OS Control Center</h3>
+    <p class="small-note">Full artist manager system: artists, campaigns, tracking links, content plans, platform connections, and admin control.</p>
+
+    <div class="music-dashboard-grid">
+      <div class="music-stat-card">
+        <h4>👤 Add Artist</h4>
+        <input id="music-artist-name" placeholder="Artist name">
+        <input id="music-artist-genre" placeholder="Genre, example: R&B, Rap, Hip-Hop">
+        <textarea id="music-artist-goal" placeholder="Artist goal, example: push new single, grow TikTok, get 10k views"></textarea>
+        <button onclick="saveMusicArtist()">Save Artist</button>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>🚀 Create Campaign</h4>
+        <input id="music-campaign-artist" placeholder="Artist name">
+        <input id="music-campaign-title" placeholder="Campaign title">
+        <input id="music-campaign-platform" placeholder="Platform, example: TikTok + YouTube Shorts">
+        <textarea id="music-campaign-goal" placeholder="Campaign goal"></textarea>
+        <button onclick="saveMusicCampaign()">Save Campaign</button>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>🔗 Tracking Link</h4>
+        <input id="music-link-artist" placeholder="Artist name">
+        <input id="music-link-campaign" placeholder="Campaign name">
+        <input id="music-link-url" placeholder="Song/video/link URL">
+        <button onclick="saveMusicLink()">Save Tracking Link</button>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>🔌 Platform Connections</h4>
+        <button onclick="musicManagerAgent('connect_youtube')">▶️ Connect YouTube Plan</button>
+        <button onclick="musicManagerAgent('connect_tiktok')">🎵 Connect TikTok Plan</button>
+        <button onclick="musicManagerAgent('connect_google')">📈 Connect Google Plan</button>
+        <p class="small-note">These are API-ready placeholders. Real OAuth/API connection comes next.</p>
+      </div>
+    </div>
+
     <div class="music-platform-grid">
+      <button onclick="musicManagerAgent('daily_tasks')">🧠 Daily Manager Tasks</button>
+      <button onclick="musicManagerAgent('weekly_plan')">📅 Weekly Content Plan</button>
+      <button onclick="musicManagerAgent('campaign_strategy')">🚀 Campaign Strategy</button>
       <button onclick="musicManagerAgent('youtube_shorts')">▶️ YouTube Shorts Plan</button>
       <button onclick="musicManagerAgent('tiktok_growth')">🎵 TikTok Growth Plan</button>
-      <button onclick="musicManagerAgent('generate_titles')">🏷️ Generate Titles</button>
       <button onclick="musicManagerAgent('captions_hashtags')">✍️ Captions + Hashtags</button>
-      <button onclick="musicManagerAgent('post_schedule')">⏰ 7-Day Posting Schedule</button>
-      <button onclick="musicManagerAgent('repost_strategy')">🔁 Repost Strategy</button>
-    </div>
-  </div>
-
-  <div class="panel music-growth-engine">
-    <h3>🚀 Growth Engine</h3>
-    <p class="small-note">Campaigns, rollout plans, fan engagement, and automation.</p>
-    <div class="music-platform-grid">
-      <button onclick="musicManagerAgent('new_single_campaign')">🚀 New Single Campaign</button>
-      <button onclick="musicManagerAgent('seven_day_promo')">📅 7-Day Promo Plan</button>
-      <button onclick="musicManagerAgent('fan_engagement')">💬 Fan Engagement Plan</button>
-      <button onclick="musicManagerAgent('best_content_to_push')">📈 Best Content To Push</button>
+      <button onclick="musicManagerAgent('post_schedule')">⏰ Best Posting Schedule</button>
+      <button onclick="musicManagerAgent('admin_overview')">👑 Admin Overview</button>
+      <button onclick="musicManagerAgent('reports')">📊 Reports</button>
       <button onclick="musicManagerAgent('automation')">🤖 Automation Plan</button>
-      <button onclick="loadMusicManagerData()">🔄 Refresh Saved Data</button>
     </div>
 
     <div class="music-dashboard-grid">
-      <div class="music-stat-card"><h4>Saved Artists</h4><div id="music-artists-list">No artists loaded yet.</div></div>
-      <div class="music-stat-card"><h4>Saved Campaigns</h4><div id="music-campaigns-list">No campaigns loaded yet.</div></div>
-      <div class="music-stat-card"><h4>Tracking Links</h4><div id="music-links-list">No links loaded yet.</div></div>
+      <div class="music-stat-card">
+        <h4>Saved Artists</h4>
+        <div id="music-artists-list">No artists loaded yet.</div>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>Saved Campaigns</h4>
+        <div id="music-campaigns-list">No campaigns loaded yet.</div>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>Tracking Links</h4>
+        <div id="music-links-list">No links loaded yet.</div>
+      </div>
+
+      <div class="music-stat-card">
+        <h4>Manager Output</h4>
+        <pre id="music-manager-control-answer"></pre>
+      </div>
     </div>
   </div>
-</section>
 
+
+</section>
 
 
 <section id="realestate" class="page">
