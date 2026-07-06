@@ -322,6 +322,195 @@ cat > templates/index.html <<'EOF'
     </div>
   </div>
 
+  
+  <div class="panel music-growth-campaign-engine">
+    <h3>🚀 Growth Campaign Engine</h3>
+    <p class="small-note">Turn one song, video, or idea into a full cross-platform growth campaign for YouTube Shorts, TikTok, and Instagram Reels.</p>
+
+    <div class="music-form-grid">
+      <input id="growth-artist" placeholder="Artist name">
+      <input id="growth-genre" placeholder="Genre, example: Rap / R&B / Drill">
+      <input id="growth-song" placeholder="Song, video, or project name">
+      <input id="growth-goal" placeholder="Goal, example: grow views, push single, get fans">
+    </div>
+
+    <textarea id="growth-content-notes" placeholder="Paste notes about the song/video, lyrics, vibe, target audience, city, story, or what you want the campaign to do."></textarea>
+
+    <div class="command-buttons">
+      <button onclick="runGrowthCampaignEngine()">🚀 Run Growth Campaign</button>
+      <button onclick="musicManagerAgent('make_10_videos')">🎬 Make 10 Video Ideas</button>
+      <button onclick="musicManagerAgent('repost_strategy')">♻️ Repurpose / Repost Plan</button>
+      <button onclick="musicManagerAgent('captions_hashtags')">✍️ Platform Captions</button>
+      <button onclick="loadGrowthCampaigns()">📂 Load Campaigns</button>
+    </div>
+
+    <pre id="growth-campaign-answer"></pre>
+  </div>
+
+
+  
+  
+  <div class="panel campaign-control-room">
+    <h3>🎛️ Campaign Control Room</h3>
+    <p class="small-note">Big screen view: CL tracks the campaign, shows what to post, what is approved, and what is ready to publish.</p>
+
+    <div class="campaign-big-screen">
+      <div>
+        <h2 id="campaign-screen-title">No campaign loaded yet</h2>
+        <p id="campaign-screen-subtitle">Run a Growth Campaign, then create a campaign project.</p>
+      </div>
+
+      <div class="campaign-progress-wrap">
+        <div class="campaign-progress-bar"><div id="campaign-progress-fill" style="width:0%"></div></div>
+        <strong id="campaign-progress-text">0%</strong>
+      </div>
+
+      <div class="campaign-stage-grid">
+        <div><strong>Drafts</strong><span id="campaign-drafts-count">0</span></div>
+        <div><strong>Approved</strong><span id="campaign-approved-count">0</span></div>
+        <div><strong>Posted</strong><span id="campaign-posted-count">0</span></div>
+        <div><strong>Platforms</strong><span>YouTube / TikTok / IG</span></div>
+      </div>
+    </div>
+
+    <div class="command-buttons">
+      <button onclick="createCampaignProject()">🎬 Create Campaign Project</button>
+      <button onclick="loadCampaignProjects()">📂 Load Campaign Projects</button>
+      <button onclick="buildCampaignActionQueue()">✅ Build Post Cards</button>
+      <button onclick="loadCampaignActionQueue()">🔄 Refresh Post Cards</button>
+    </div>
+
+    <div id="campaign-project-list">No campaign project loaded yet.</div>
+  </div>
+
+
+  
+  
+  
+  
+  <div class="panel music-market-scan-panel">
+    <h3>🔍 YouTube Market Scanner</h3>
+    <p class="small-note">Scan your genre, study what is working, then create original content for your artist based on market demand.</p>
+
+    <div class="music-form-grid">
+      <input id="market-artist" placeholder="Artist name">
+      <input id="market-genre" placeholder="Genre, example: Chicago rap, R&B, drill, gospel rap">
+      <input id="market-keyword" placeholder="Keyword, example: pain music, street vlog, best rap song">
+    </div>
+
+    <div class="command-buttons">
+      <button onclick="runYouTubeMarketScan()">🔍 Scan Market</button>
+      <button onclick="copyTextById('market-scan-output')">Copy Market Plan</button>
+    </div>
+
+    <div id="market-video-results"></div>
+    <textarea id="market-scan-output" placeholder="Market analysis and original content plan will appear here."></textarea>
+  </div>
+
+
+  <div class="panel cl-video-tv-studio">
+    <h3>📺 CL Video TV Studio</h3>
+    <p class="small-note">Upload a video, watch it inside CL, then let the AI write the title, caption, hashtags, and platform versions before sending to the CL Publishing Queue.</p>
+
+    <div class="tv-studio-grid">
+      <div class="tv-screen-wrap">
+        <video id="cl-video-player" class="cl-tv-screen" controls playsinline></video>
+        <iframe id="cl-youtube-embed-preview" class="cl-tv-screen" style="display:none;" allowfullscreen></iframe>
+        <p id="cl-video-status">No video loaded yet.</p>
+      </div>
+
+      <div class="tv-controls">
+        <input type="file" id="cl-video-file" accept="video/*">
+        <input id="cl-video-artist" placeholder="Artist name">
+        <input id="cl-video-song" placeholder="Song/project/video name">
+        <textarea id="cl-video-notes" placeholder="Describe the video vibe, lyrics, goal, city, story, or what you want it to do."></textarea>
+
+        <div class="command-buttons">
+          <button onclick="uploadCLVideo()">⬆️ Upload + Preview</button>
+          <button onclick="loadMyYouTubeVideosForImport()">📺 Pick + Analyze My YouTube</button>
+
+        <input id="cl-youtube-url-input" placeholder="Paste YouTube video link here">
+        <button onclick="analyzeYouTubeLinkSimple()">🔗 Analyze YouTube Link</button>
+
+          
+          <button onclick="buildVideoPostPackage()">🧠 Build Post Package</button>
+          <button onclick="saveYouTubeAnalysisCampaign()">💾 Save YouTube Campaign</button>
+          <button onclick="buildYouTubePostCardsFromCurrent()">✅ Build 10 Post Cards</button>
+          <button onclick="loadYouTubePostCards()">📂 Load Post Cards</button>
+          <button onclick="loadYouTubeAnalysisCampaigns()">📂 Load YouTube Campaigns</button>
+          <button onclick="buildSmartEditPlanFromCampaign()">🎬 Smart Edit Plan</button>
+          <button onclick="repurposeVideoInto10Shorts()">🎬 Turn Into 10 Shorts Plan</button>
+          <button onclick="create10ShortClips()">✂️ Export 10 Short Clips</button>
+          <button onclick="makeCLContentVideos2()">🎬 Make Me Content 2.0</button>
+          <button onclick="copyTextById('cl-video-draft')">Copy</button>
+          <button onclick="sendVideoDraftToCLQueue()">📤 Add to CL Publishing Queue</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="youtube-picker-results"></div>
+
+    <textarea id="cl-video-draft" placeholder="AI title, caption, hashtags, and platform drafts will appear here."></textarea>
+  </div>
+
+
+  
+  <div class="panel cl-publishing-queue-panel">
+    <h3>📡 CL Publishing Queue</h3>
+    <p class="small-note">Approved posts live here before they go to YouTube, TikTok, Instagram, or n8n automation.</p>
+
+    <div class="command-buttons">
+      <button onclick="loadCLPublishingQueue()">🔄 Load Queue</button>
+      <button onclick="clearCLPublishingQueueConfirm()">🧹 Clear Queue</button>
+    </div>
+
+    <div id="cl-publishing-queue-list">No publishing queue loaded yet.</div>
+  </div>
+
+
+  <div class="panel music-draft-studio-panel">
+    <h3>📺 Draft Studio</h3>
+    <p class="small-note">This is where CL shows the actual post content, rewrites it with AI, then approves it.</p>
+
+    <textarea id="draft-studio-content" placeholder="Draft will appear here after you press Build Draft on a post card."></textarea>
+    <textarea id="draft-studio-instruction" placeholder="Tell AI how to edit it. Example: make it more viral, make it Chicago rap, make it emotional, make it sound like SolidWorld."></textarea>
+
+    <div class="command-buttons">
+      <button onclick="rewriteDraftWithAI()">✍️ Rewrite With AI</button>
+      <button onclick="approveDraftStudio()">✅ Approve Draft</button>
+      <button onclick="copyTextById('draft-studio-content')">Copy Draft</button>
+    </div>
+
+    <pre id="draft-studio-status"></pre>
+  </div>
+
+
+  <div class="panel music-post-builder-panel">
+    <h3>📤 Post Builder</h3>
+    <p class="small-note">Turn approved campaign actions into real post drafts with title, hook, caption, hashtags, CTA, and platform notes.</p>
+
+    <div class="command-buttons">
+      <button onclick="buildPostDraftFromSelected()">📤 Build Post Draft</button>
+      <button onclick="loadPostDrafts()">📂 Load Post Drafts</button>
+    </div>
+
+    <div id="music-post-drafts-list">No post drafts loaded yet.</div>
+  </div>
+
+
+  <div class="panel music-action-queue-panel">
+    <h3>✅ Campaign Action Queue</h3>
+    <p class="small-note">This turns the campaign into real tasks CL can track, approve, and later post automatically.</p>
+
+    <div class="command-buttons">
+      <button onclick="buildCampaignActionQueue()">✅ Build Action Queue From Campaign</button>
+      <button onclick="loadCampaignActionQueue()">🔄 Refresh Queue</button>
+    </div>
+
+    <div id="music-action-queue-list">No action queue loaded yet.</div>
+  </div>
+
+
   <div class="panel music-growth-engine">
     <h3>🚀 Growth Engine</h3>
     <p class="small-note">Campaigns, rollout plans, fan engagement, and automation.</p>
@@ -797,7 +986,7 @@ cat > templates/index.html <<'EOF'
 
 
 
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=restoremake2"></script>
   <script src="/static/js/command-center.js"></script>
 </body>
 </html>

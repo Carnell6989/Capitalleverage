@@ -1803,7 +1803,1384 @@ def youtube_status():
         "connected": connected,
         "message": "YouTube is connected." if connected else "YouTube is not connected yet."
     })
+# =========================
+# MUSIC GROWTH CAMPAIGN ENGINE
+# =========================
+
+MUSIC_GROWTH_CAMPAIGNS_FILE = DATA_DIR / "music_growth_campaigns.json"
+
+@app.route("/music/growth-campaign", methods=["POST"])
+def music_growth_campaign():
+    data = request.get_json(silent=True) or {}
+
+    artist = data.get("artist", "")
+    genre = data.get("genre", "")
+    song = data.get("song", "")
+    goal = data.get("goal", "")
+    platforms = data.get("platforms", "YouTube Shorts, TikTok, Instagram Reels")
+    content_notes = data.get("content_notes", "")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Your mission is to grow this artist.
+You are not just giving ideas. You are building a real growth campaign.
+
+Rules:
+- Use only the artist's own content or content they have rights/permission to use.
+- Do not tell the artist to steal or repost copyrighted videos without permission.
+- Make each platform different. Do not copy/paste the same caption everywhere.
+- Build posts that feel real, emotional, clickable, and shareable.
+- Focus on growth: views, comments, saves, followers, and fans.
+
+Artist: {artist}
+Genre: {genre}
+Song/project/video: {song}
+Goal: {goal}
+Platforms: {platforms}
+Content notes: {content_notes}
+
+Return this exact structure:
+
+HERE IS THE MOVE
+
+1. Campaign Name
+2. Main Growth Strategy
+3. 7-Day Posting Schedule
+4. 10 Short Video Ideas
+5. YouTube Shorts Posts
+   - title
+   - caption
+   - hashtags
+   - hook
+6. TikTok Posts
+   - caption
+   - hashtags
+   - hook
+7. Instagram Reels Posts
+   - caption
+   - hashtags
+   - hook
+8. Repost / Repurpose Plan
+9. Fan Engagement Tasks
+10. Trend Angles To Watch
+11. Approval Queue
+   - Draft Post 1
+   - Draft Post 2
+   - Draft Post 3
+12. Next 3 Actions
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    campaign = {
+        "id": str(int(datetime.now().timestamp())),
+        "artist": artist,
+        "genre": genre,
+        "song": song,
+        "goal": goal,
+        "platforms": platforms,
+        "content_notes": content_notes,
+        "status": "Draft Campaign Built",
+        "output": answer,
+        "created_at": datetime.now().isoformat()
+    }
+
+    campaigns = load_json(MUSIC_GROWTH_CAMPAIGNS_FILE)
+    campaigns.append(campaign)
+    save_json(MUSIC_GROWTH_CAMPAIGNS_FILE, campaigns)
+
+    return jsonify({
+        "success": True,
+        "message": "Growth Campaign Engine built a campaign.",
+        "campaign": campaign,
+        "answer": answer
+    })
+
+@app.route("/music/growth-campaigns", methods=["GET"])
+def music_growth_campaigns():
+    return jsonify(load_json(MUSIC_GROWTH_CAMPAIGNS_FILE))
+
+# =========================
+# MUSIC CAMPAIGN ACTION QUEUE
+# =========================
+
+# =========================
+# MUSIC CAMPAIGN ACTION QUEUE
+# =========================
+
+MUSIC_ACTION_QUEUE_FILE = DATA_DIR / "music_campaign_action_queue.json"
+
+@app.route("/music/action-queue", methods=["GET", "POST"])
+def music_action_queue():
+    if request.method == "GET":
+        return jsonify(load_json(MUSIC_ACTION_QUEUE_FILE))
+
+    data = request.get_json(silent=True) or {}
+    artist = data.get("artist", "")
+    song = data.get("song", "")
+    campaign_text = data.get("campaign_text", "")
+
+    base_time = int(datetime.now().timestamp() * 1000)
+
+    actions = [
+        {"id": str(base_time + 1), "platform": "YouTube Shorts", "task": "Post teaser video from the campaign", "status": "Draft", "day": "Day 1"},
+        {"id": str(base_time + 2), "platform": "TikTok", "task": "Post hook clip with platform-specific caption", "status": "Draft", "day": "Day 1"},
+        {"id": str(base_time + 3), "platform": "Instagram Reels", "task": "Post behind-the-scenes or story reel", "status": "Draft", "day": "Day 2"},
+        {"id": str(base_time + 4), "platform": "YouTube Shorts", "task": "Post performance or lyric clip", "status": "Draft", "day": "Day 3"},
+        {"id": str(base_time + 5), "platform": "TikTok", "task": "Post fan engagement / comment bait clip", "status": "Draft", "day": "Day 4"},
+        {"id": str(base_time + 6), "platform": "Instagram Reels", "task": "Repost strongest clip with a new caption", "status": "Draft", "day": "Day 5"},
+        {"id": str(base_time + 7), "platform": "All Platforms", "task": "Review results and double down on best post", "status": "Draft", "day": "Day 7"},
+    ]
+
+    queue = load_json(MUSIC_ACTION_QUEUE_FILE)
+
+    for a in actions:
+        a["artist"] = artist
+        a["song"] = song
+        a["campaign_text"] = campaign_text[:3000]
+        a["created_at"] = datetime.now().isoformat()
+        queue.append(a)
+
+    save_json(MUSIC_ACTION_QUEUE_FILE, queue)
+
+    return jsonify({
+        "success": True,
+        "message": "Campaign action queue created.",
+        "actions": actions
+    })
+
+@app.route("/music/action-queue/update", methods=["POST"])
+def music_action_queue_update():
+    data = request.get_json(silent=True) or {}
+    action_id = str(data.get("id", ""))
+    status = data.get("status", "Draft")
+
+    queue = load_json(MUSIC_ACTION_QUEUE_FILE)
+
+    for item in queue:
+        if str(item.get("id")) == action_id:
+            item["status"] = status
+            item["updated_at"] = datetime.now().isoformat()
+
+    save_json(MUSIC_ACTION_QUEUE_FILE, queue)
+
+    return jsonify({"success": True, "message": "Action updated."})
+# =========================
+# CAMPAIGN CONTROL ROOM
+# =========================
+
+MUSIC_CAMPAIGN_PROJECTS_FILE = DATA_DIR / "music_campaign_projects.json"
+
+@app.route("/music/campaign-project", methods=["GET", "POST"])
+def music_campaign_project():
+    if request.method == "GET":
+        return jsonify(load_json(MUSIC_CAMPAIGN_PROJECTS_FILE))
+
+    data = request.get_json(silent=True) or {}
+
+    project = {
+        "id": str(int(datetime.now().timestamp() * 1000)),
+        "artist": data.get("artist", ""),
+        "song": data.get("song", ""),
+        "goal": data.get("goal", ""),
+        "platforms": data.get("platforms", ["YouTube Shorts", "TikTok", "Instagram Reels"]),
+        "status": "Draft",
+        "progress": 0,
+        "posts_planned": 7,
+        "posts_approved": 0,
+        "posts_done": 0,
+        "campaign_text": data.get("campaign_text", ""),
+        "created_at": datetime.now().isoformat()
+    }
+
+    projects = load_json(MUSIC_CAMPAIGN_PROJECTS_FILE)
+    projects.append(project)
+    save_json(MUSIC_CAMPAIGN_PROJECTS_FILE, projects)
+
+    return jsonify({"success": True, "project": project})
+
+
+@app.route("/music/campaign-project/update", methods=["POST"])
+def music_campaign_project_update():
+    data = request.get_json(silent=True) or {}
+    project_id = str(data.get("id", ""))
+    status = data.get("status", "Draft")
+    progress = int(data.get("progress", 0))
+
+    projects = load_json(MUSIC_CAMPAIGN_PROJECTS_FILE)
+    for p in projects:
+        if str(p.get("id")) == project_id:
+            p["status"] = status
+            p["progress"] = progress
+            p["updated_at"] = datetime.now().isoformat()
+
+    save_json(MUSIC_CAMPAIGN_PROJECTS_FILE, projects)
+    return jsonify({"success": True})
+# =========================
+# MUSIC POST BUILDER
+# =========================
+
+MUSIC_POST_DRAFTS_FILE = DATA_DIR / "music_post_drafts.json"
+
+@app.route("/music/post-builder", methods=["GET", "POST"])
+def music_post_builder():
+    if request.method == "GET":
+        return jsonify(load_json(MUSIC_POST_DRAFTS_FILE))
+
+    data = request.get_json(silent=True) or {}
+    artist = data.get("artist", "")
+    song = data.get("song", "")
+    platform = data.get("platform", "YouTube Shorts")
+    task = data.get("task", "")
+    campaign_text = data.get("campaign_text", "")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Create a real ready-to-use post draft for this artist.
+Do not just give advice. Build the actual post.
+
+Artist: {artist}
+Song/project: {song}
+Platform: {platform}
+Task: {task}
+
+Campaign context:
+{campaign_text[:3000]}
+
+Return:
+1. Title
+2. Hook
+3. Caption
+4. Hashtags
+5. Video idea
+6. CTA
+7. Best posting time
+8. Notes for recording/editing
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    draft = {
+        "id": str(int(datetime.now().timestamp() * 1000)),
+        "artist": artist,
+        "song": song,
+        "platform": platform,
+        "task": task,
+        "status": "Draft",
+        "draft_text": answer,
+        "created_at": datetime.now().isoformat()
+    }
+
+    drafts = load_json(MUSIC_POST_DRAFTS_FILE)
+    drafts.append(draft)
+    save_json(MUSIC_POST_DRAFTS_FILE, drafts)
+
+    return jsonify({"success": True, "draft": draft, "answer": answer})
+
+@app.route("/music/post-builder/update", methods=["POST"])
+def music_post_builder_update():
+    data = request.get_json(silent=True) or {}
+    draft_id = str(data.get("id", ""))
+    status = data.get("status", "Draft")
+
+    drafts = load_json(MUSIC_POST_DRAFTS_FILE)
+    for d in drafts:
+        if str(d.get("id")) == draft_id:
+            d["status"] = status
+            d["updated_at"] = datetime.now().isoformat()
+
+    save_json(MUSIC_POST_DRAFTS_FILE, drafts)
+    return jsonify({"success": True})
+# =========================
+# DRAFT STUDIO AI REWRITE
+# =========================
+
+@app.route("/music/post-builder/rewrite", methods=["POST"])
+def music_post_builder_rewrite():
+    data = request.get_json(silent=True) or {}
+
+    draft_text = data.get("draft_text", "")
+    instruction = data.get("instruction", "Make this stronger, clearer, more viral, and more specific to the artist.")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Rewrite this post draft based on the user's instruction.
+
+Instruction:
+{instruction}
+
+Current draft:
+{draft_text}
+
+Return:
+1. Title
+2. Hook
+3. Caption
+4. Hashtags
+5. CTA
+6. Best posting time
+7. Notes for recording/editing
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    return jsonify({"success": True, "answer": answer})
+# =========================
+# CL VIDEO TV STUDIO
+# =========================
+
+VIDEO_UPLOAD_DIR = UPLOAD_DIR / "music_videos"
+VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+@app.route("/music/video/upload", methods=["POST"])
+def music_video_upload():
+    if "video" not in request.files:
+        return jsonify({"success": False, "message": "No video uploaded."}), 400
+
+    f = request.files["video"]
+    filename = secure_filename(f.filename)
+
+    if not filename:
+        return jsonify({"success": False, "message": "Missing filename."}), 400
+
+    save_path = VIDEO_UPLOAD_DIR / filename
+    f.save(save_path)
+
+    return jsonify({
+        "success": True,
+        "filename": filename,
+        "url": f"/uploads/music_videos/{filename}",
+        "message": "Video uploaded."
+    })
+
+@app.route("/uploads/music_videos/<path:filename>")
+def serve_music_video(filename):
+    from flask import send_from_directory
+    return send_from_directory(VIDEO_UPLOAD_DIR, filename)
+
+@app.route("/music/video/ai-draft", methods=["POST"])
+def music_video_ai_draft():
+    data = request.get_json(silent=True) or {}
+
+    artist = data.get("artist", "")
+    song = data.get("song", "")
+    platform = data.get("platform", "YouTube Shorts, TikTok, Instagram Reels")
+    notes = data.get("notes", "")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Create a real post package for this video.
+
+Artist: {artist}
+Song/project: {song}
+Platform(s): {platform}
+Video notes: {notes}
+
+Return:
+1. Best Title
+2. 3 Alternative Titles
+3. Hook
+4. Caption
+5. Hashtags
+6. CTA
+7. YouTube Shorts Version
+8. TikTok Version
+9. Instagram Reels Version
+10. Best posting time
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    return jsonify({"success": True, "answer": answer})
+# =========================
+# YOUTUBE MARKET SCAN ENGINE
+# =========================
+
+@app.route("/music/youtube/market-scan", methods=["POST"])
+def music_youtube_market_scan():
+    data = request.get_json(silent=True) or {}
+    genre = data.get("genre", "rap music")
+    keyword = data.get("keyword", "")
+    artist = data.get("artist", "")
+
+    service = get_youtube_service()
+    if not service:
+        return jsonify({"success": False, "message": "YouTube is not connected."}), 400
+
+    query = f"{genre} {keyword}".strip()
+
+    search = service.search().list(
+        part="snippet",
+        q=query,
+        type="video",
+        maxResults=10,
+        order="viewCount"
+    ).execute()
+
+    video_ids = [item["id"]["videoId"] for item in search.get("items", []) if item.get("id", {}).get("videoId")]
+
+    stats = []
+    if video_ids:
+        detail = service.videos().list(
+            part="snippet,statistics",
+            id=",".join(video_ids)
+        ).execute()
+
+        for v in detail.get("items", []):
+            stats.append({
+                "id": v.get("id"),
+                "title": v.get("snippet", {}).get("title"),
+                "channel": v.get("snippet", {}).get("channelTitle"),
+                "description": v.get("snippet", {}).get("description", "")[:500],
+                "published_at": v.get("snippet", {}).get("publishedAt"),
+                "thumbnail": v.get("snippet", {}).get("thumbnails", {}).get("medium", {}).get("url"),
+                "views": v.get("statistics", {}).get("viewCount", "0"),
+                "likes": v.get("statistics", {}).get("likeCount", "0"),
+                "comments": v.get("statistics", {}).get("commentCount", "0")
+            })
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Analyze these top YouTube videos in the same market/genre.
+Do NOT copy or steal their content.
+Use them only to identify market patterns, hooks, topics, title styles, and fan demand.
+
+Artist we are helping: {artist}
+Genre/market: {genre}
+Keyword: {keyword}
+
+Top market videos:
+{json.dumps(stats, indent=2)}
+
+Return:
+1. What is working in this market
+2. Common hooks and title patterns
+3. What fans are responding to
+4. What this artist should NOT copy
+5. 10 original video ideas for this artist
+6. 10 original YouTube Shorts titles
+7. 10 TikTok caption ideas
+8. 10 Instagram Reels captions
+9. Hashtag sets
+10. 7-day campaign plan
+11. Next 3 moves for the artist
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    return jsonify({
+        "success": True,
+        "query": query,
+        "videos": stats,
+        "answer": answer
+    })
+# =========================
+# CL PUBLISHING QUEUE + 10 SHORTS ENGINE
+# =========================
+
+CL_PUBLISHING_QUEUE_FILE = DATA_DIR / "cl_publishing_queue.json"
+
+@app.route("/music/publishing-queue", methods=["GET", "POST"])
+def music_publishing_queue():
+    if request.method == "GET":
+        return jsonify(load_json(CL_PUBLISHING_QUEUE_FILE))
+
+    data = request.get_json(silent=True) or {}
+
+    item = {
+        "id": str(int(datetime.now().timestamp() * 1000)),
+        "artist": data.get("artist", ""),
+        "song": data.get("song", ""),
+        "video_url": data.get("video_url", ""),
+        "draft_text": data.get("draft_text", ""),
+        "platforms": data.get("platforms", ["YouTube Shorts", "TikTok", "Instagram Reels"]),
+        "status": "Queued",
+        "created_at": datetime.now().isoformat()
+    }
+
+    q = load_json(CL_PUBLISHING_QUEUE_FILE)
+    q.append(item)
+    save_json(CL_PUBLISHING_QUEUE_FILE, q)
+
+    return jsonify({"success": True, "item": item})
+
+
+@app.route("/music/video/repurpose-10-shorts", methods=["POST"])
+def music_video_repurpose_10_shorts():
+    data = request.get_json(silent=True) or {}
+
+    artist = data.get("artist", "")
+    song = data.get("song", "")
+    notes = data.get("notes", "")
+    draft_text = data.get("draft_text", "")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Turn this ONE artist video into 10 original short-form posts.
+Do not copy other creators.
+Build original versions for YouTube Shorts, TikTok, and Instagram Reels.
+
+Artist: {artist}
+Song/project/video: {song}
+Video notes: {notes}
+Current draft/context:
+{draft_text}
+
+Return exactly:
+
+1. 10 Shorts Breakdown
+For each short:
+- Short number
+- Clip idea
+- Best timestamp idea if known
+- Hook
+- Title
+- Caption
+- Hashtags
+- CTA
+- Platform version: YouTube Shorts
+- Platform version: TikTok
+- Platform version: Instagram Reels
+- Editing notes
+
+2. 7-Day Posting Schedule
+
+3. Best 3 Shorts to post first
+
+4. Fan engagement plan
+
+5. What to track after posting
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    return jsonify({"success": True, "answer": answer})
+
+# =========================
+# CL PUBLISHING QUEUE CLEAR
+# =========================
+
+@app.route("/music/publishing-queue/clear", methods=["POST"])
+def music_publishing_queue_clear():
+    save_json(CL_PUBLISHING_QUEUE_FILE, [])
+    return jsonify({"success": True, "message": "Publishing queue cleared."})
+# =========================
+# YOUTUBE VIDEO IMPORTER
+# =========================
+
+@app.route("/music/youtube/import-video", methods=["POST"])
+def music_youtube_import_video():
+    import subprocess
+
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "").strip()
+
+    if not url:
+        return jsonify({"success": False, "message": "Missing YouTube URL."}), 400
+
+    VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    out_template = str(VIDEO_UPLOAD_DIR / "%(title).80s-%(id)s.%(ext)s")
+
+    cmd = [
+        "yt-dlp",
+        "-f", "mp4/best",
+        "-o", out_template,
+        url
+    ]
+
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+
+        if r.returncode != 0:
+            return jsonify({
+                "success": False,
+                "message": "Download failed.",
+                "error": r.stderr[-2000:]
+            }), 500
+
+        files = sorted(VIDEO_UPLOAD_DIR.glob("*"), key=lambda p: p.stat().st_mtime, reverse=True)
+        latest = files[0]
+
+        return jsonify({
+            "success": True,
+            "filename": latest.name,
+            "url": f"/uploads/music_videos/{latest.name}",
+            "message": "YouTube video imported into CL."
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# =========================
+# FFMPEG 10 SHORTS CLIP CUTTER
+# =========================
+
+SHORTS_EXPORT_DIR = UPLOAD_DIR / "music_shorts"
+SHORTS_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+@app.route("/uploads/music_shorts/<path:filename>")
+def serve_music_short(filename):
+    from flask import send_from_directory
+    return send_from_directory(SHORTS_EXPORT_DIR, filename)
+
+@app.route("/music/video/create-10-shorts", methods=["POST"])
+def music_video_create_10_shorts():
+    import subprocess, json, math
+
+    data = request.get_json(silent=True) or {}
+    video_url = data.get("video_url", "")
+    clip_seconds = int(data.get("clip_seconds", 15))
+    count = int(data.get("count", 10))
+
+    if "/uploads/music_videos/" not in video_url:
+        return jsonify({"success": False, "message": "Upload or import a video first."}), 400
+
+    filename = video_url.split("/uploads/music_videos/")[-1]
+    src = VIDEO_UPLOAD_DIR / filename
+
+    if not src.exists():
+        return jsonify({"success": False, "message": "Source video not found."}), 404
+
+    probe_cmd = [
+        "ffprobe", "-v", "error",
+        "-show_entries", "format=duration",
+        "-of", "json",
+        str(src)
+    ]
+
+    probe = subprocess.run(probe_cmd, capture_output=True, text=True)
+    duration = float(json.loads(probe.stdout)["format"]["duration"])
+
+    step = max(1, duration / max(count, 1))
+    made = []
+
+    base = src.stem[:40].replace(" ", "_")
+
+    for i in range(count):
+        start = int(i * step)
+        if start + clip_seconds > duration:
+            start = max(0, int(duration - clip_seconds))
+
+        out_name = f"{base}_short_{i+1}.mp4"
+        out_path = SHORTS_EXPORT_DIR / out_name
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", str(start),
+            "-i", str(src),
+            "-t", str(clip_seconds),
+            "-vf", "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920",
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-crf", "23",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            str(out_path)
+        ]
+
+        r = subprocess.run(cmd, capture_output=True, text=True)
+
+        if r.returncode == 0 and out_path.exists():
+            made.append({
+                "number": i + 1,
+                "start": start,
+                "duration": clip_seconds,
+                "filename": out_name,
+                "url": f"/uploads/music_shorts/{out_name}"
+            })
+
+    return jsonify({
+        "success": True,
+        "message": f"Created {len(made)} vertical shorts.",
+        "shorts": made
+    })
+# =========================
+# FIXED YOUTUBE IMPORTER
+# downloads your own/right-to-use YouTube videos into CL
+# =========================
+
+@app.route("/music/youtube/import-url", methods=["POST"])
+def music_youtube_import_url():
+    import subprocess, uuid
+
+    data = request.get_json(silent=True) or {}
+    url = data.get("url", "").strip()
+
+    if not url:
+        return jsonify({"success": False, "message": "Paste a YouTube URL first."}), 400
+
+    VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    safe_id = str(uuid.uuid4())[:8]
+    out_template = str(VIDEO_UPLOAD_DIR / f"youtube_import_{safe_id}.%(ext)s")
+
+    cmd = [
+        "yt-dlp",
+        "--no-playlist",
+        "--merge-output-format", "mp4",
+        "-f", "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/best",
+        "-o", out_template,
+        url
+    ]
+
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+
+    if r.returncode != 0:
+        return jsonify({
+            "success": False,
+            "message": "YouTube import failed.",
+            "error": r.stderr[-3000:] or r.stdout[-3000:]
+        }), 500
+
+    files = sorted(VIDEO_UPLOAD_DIR.glob(f"youtube_import_{safe_id}*"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+    if not files:
+        return jsonify({"success": False, "message": "Downloaded file was not found."}), 500
+
+    latest = files[0]
+
+    return jsonify({
+        "success": True,
+        "filename": latest.name,
+        "url": f"/uploads/music_videos/{latest.name}",
+        "message": "YouTube video imported into CL."
+    })
+
+# =========================
+# MY YOUTUBE VIDEO PICKER
+# =========================
+
+# =========================
+# MY YOUTUBE VIDEO PICKER FIX
+# =========================
+
+# =========================
+# MY YOUTUBE VIDEO PICKER CLEAN
+# =========================
+
+@app.route("/music/youtube/my-videos-picker", methods=["GET"])
+def music_youtube_my_videos_picker():
+    service = get_youtube_service()
+    if not service:
+        return jsonify({"success": False, "message": "YouTube is not connected."}), 400
+
+    ch = service.channels().list(part="contentDetails", mine=True).execute()
+    items = ch.get("items", [])
+
+    if not items:
+        return jsonify({"success": False, "message": "No connected YouTube channel found."}), 404
+
+    uploads = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+
+    pl = service.playlistItems().list(
+        part="snippet,contentDetails",
+        playlistId=uploads,
+        maxResults=25
+    ).execute()
+
+    videos = []
+    for item in pl.get("items", []):
+        sn = item.get("snippet", {})
+        vid = item.get("contentDetails", {}).get("videoId")
+
+        if not vid:
+            continue
+
+        videos.append({
+            "id": vid,
+            "title": sn.get("title", "Untitled"),
+            "thumbnail": sn.get("thumbnails", {}).get("medium", {}).get("url", ""),
+            "published_at": sn.get("publishedAt", ""),
+            "url": f"https://www.youtube.com/watch?v={vid}"
+        })
+
+    return jsonify({"success": True, "videos": videos})
+# =========================
+# ANALYZE SELECTED YOUTUBE VIDEO
+# =========================
+
+# =========================
+# ANALYZE SELECTED YOUTUBE VIDEO FAST/FALLBACK
+# =========================
+
+@app.route("/music/youtube/analyze-video", methods=["POST"])
+def music_youtube_analyze_video():
+    data = request.get_json(silent=True) or {}
+    title = data.get("title", "Selected YouTube Video")
+    url = data.get("url", "")
+    artist = data.get("artist", "Artist")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+Build an original content package from this user's own YouTube video.
+
+Artist: {artist}
+Video title: {title}
+Video URL: {url}
+
+Return:
+1. Video diagnosis
+2. 10 Shorts ideas
+3. 10 titles
+4. 10 captions
+5. Hashtags
+6. 7-day repost schedule
+7. Next 3 moves
+"""
+
+    try:
+        result = ai_router(prompt, "business")
+        answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+    except Exception:
+        answer = f"""HERE IS THE MOVE
+
+Video: {title}
+Artist: {artist}
+
+10 Shorts Ideas:
+1. Opening hook clip
+2. Best line / strongest moment
+3. Behind-the-story explanation
+4. Fan question clip
+5. Pain/emotion clip
+6. Performance energy clip
+7. Before/after artist journey
+8. Comment-response clip
+9. Lyric caption clip
+10. Repost with new hook
+
+Captions:
+1. SolidWorld is here to change the game.
+2. This one is for everybody who had to rebuild.
+3. Watch this before you count me out.
+4. The story is bigger than the song.
+5. New chapter. Same hunger.
+
+Hashtags:
+#SolidWorld #NewMusic #YouTubeShorts #RapMusic #PainMusic #IndependentArtist #MusicMarketing
+
+7-Day Plan:
+Day 1: Post hook clip.
+Day 2: Post lyric clip.
+Day 3: Post story clip.
+Day 4: Post performance clip.
+Day 5: Repost with new caption.
+Day 6: Ask fans a question.
+Day 7: Double down on the best performer.
+
+Next 3 Moves:
+1. Upload the original video file into CL.
+2. Export 10 short clips.
+3. Add the best 3 to CL Publishing Queue.
+"""
+
+    return jsonify({"success": True, "answer": answer})
+# =========================
+# YOUTUBE CAMPAIGN SAVE + SMART EDIT PLAN
+# =========================
+
+YOUTUBE_CAMPAIGNS_FILE = DATA_DIR / "youtube_campaign_projects.json"
+
+@app.route("/music/video/smart-edit-plan", methods=["POST"])
+def music_video_smart_edit_plan():
+    data = request.get_json(silent=True) or {}
+
+    artist = data.get("artist", "")
+    title = data.get("title", "")
+    notes = data.get("notes", "")
+    analysis = data.get("analysis", "")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+Create a smart video editing plan that helps this artist grow.
+Do not copy other artists. Build original edits from this artist's content.
+
+Artist: {artist}
+Video / song title: {title}
+Notes: {notes}
+
+Existing analysis:
+{analysis}
+
+Return:
+1. Best edit direction
+2. 10 clip sections to create
+3. Hook text overlays for each clip
+4. Caption/subtitle style
+5. Visual effects suggestions
+6. Sound/beat drop moments to look for
+7. 10 viral titles
+8. 10 captions
+9. 5 hashtag packs
+10. Thumbnail/text ideas
+11. Posting order
+12. What CL should create first
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    return jsonify({"success": True, "answer": answer})
+
+# =========================
+# YOUTUBE CAMPAIGN SAVE ROUTE
+# =========================
+
+YOUTUBE_CAMPAIGNS_FILE = DATA_DIR / "youtube_campaign_projects.json"
+
+@app.route("/music/youtube/campaigns", methods=["GET", "POST"])
+def music_youtube_campaigns():
+    if request.method == "GET":
+        return jsonify(load_json(YOUTUBE_CAMPAIGNS_FILE))
+
+    data = request.get_json(silent=True) or {}
+
+    item = {
+        "id": str(int(datetime.now().timestamp() * 1000)),
+        "title": data.get("title", "Untitled YouTube Campaign"),
+        "artist": data.get("artist", ""),
+        "youtube_url": data.get("youtube_url", ""),
+        "video_id": data.get("video_id", ""),
+        "analysis": data.get("analysis", ""),
+        "created_at": datetime.now().isoformat(),
+        "status": "Saved"
+    }
+
+    items = load_json(YOUTUBE_CAMPAIGNS_FILE)
+    items.append(item)
+    save_json(YOUTUBE_CAMPAIGNS_FILE, items)
+
+    return jsonify({"success": True, "campaign": item})
+# =========================
+# YOUTUBE CAMPAIGN POST CARDS
+# =========================
+
+YOUTUBE_POST_CARDS_FILE = DATA_DIR / "youtube_post_cards.json"
+
+# =========================
+# AI REWRITE YOUTUBE POST CARD
+# =========================
+
+@app.route("/music/youtube/post-card/rewrite", methods=["POST"])
+def music_youtube_post_card_rewrite():
+    data = request.get_json(silent=True) or {}
+
+    card = data.get("card", {})
+    instruction = data.get("instruction", "Make this more viral, specific, emotional, and ready to post.")
+
+    prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Rewrite this post card into a real ready-to-post draft.
+Make it original. Do not copy other artists.
+
+Instruction:
+{instruction}
+
+Post card:
+{json.dumps(card, indent=2)}
+
+Return exactly:
+TITLE:
+HOOK:
+CAPTION:
+HASHTAGS:
+PINNED COMMENT:
+BEST POSTING TIME:
+EDIT NOTES:
+"""
+
+    result = ai_router(prompt, "business")
+    answer = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+
+    return jsonify({"success": True, "answer": answer})
+
+# =========================
+# YOUTUBE CAMPAIGN POST CARDS ROUTE
+# =========================
+
+YOUTUBE_POST_CARDS_FILE = DATA_DIR / "youtube_post_cards.json"
+
+@app.route("/music/youtube/post-cards", methods=["GET", "POST"])
+def music_youtube_post_cards():
+    if request.method == "GET":
+        return jsonify(load_json(YOUTUBE_POST_CARDS_FILE))
+
+    data = request.get_json(silent=True) or {}
+
+    title = data.get("title", "YouTube Campaign")
+    artist = data.get("artist", "")
+    youtube_url = data.get("youtube_url", "")
+    analysis = data.get("analysis", "")
+
+    cards = []
+    platforms = ["YouTube Shorts", "TikTok", "Instagram Reels"]
+
+    for i in range(1, 11):
+        cards.append({
+            "id": str(int(datetime.now().timestamp() * 1000)) + f"_{i}",
+            "title": f"Short {i} — {title}",
+            "artist": artist,
+            "platform": platforms[(i - 1) % len(platforms)],
+            "youtube_url": youtube_url,
+            "hook": f"Clip {i}: strongest moment from {title}",
+            "caption": f"{artist} is building something different. Watch this. #SolidWorld #NewMusic #Shorts",
+            "hashtags": "#SolidWorld #NewMusic #YouTubeShorts #TikTokMusic #IndependentArtist",
+            "status": "Draft",
+            "analysis": analysis,
+            "created_at": datetime.now().isoformat()
+        })
+
+    existing = load_json(YOUTUBE_POST_CARDS_FILE)
+    existing.extend(cards)
+    save_json(YOUTUBE_POST_CARDS_FILE, existing)
+
+    return jsonify({"success": True, "cards": cards})
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=9000, debug=True)
+
+# =========================
+# REAL CL VIDEO GENERATOR
+# =========================
+
+GENERATED_VIDEO_DIR = UPLOAD_DIR / "generated_music_videos"
+GENERATED_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+
+@app.route("/uploads/generated_music_videos/<path:filename>")
+def serve_generated_music_video(filename):
+    from flask import send_from_directory
+    return send_from_directory(GENERATED_VIDEO_DIR, filename)
+
+@app.route("/music/video/make-content", methods=["POST"])
+def music_video_make_content():
+    import subprocess, json, textwrap, re
+
+    data = request.get_json(silent=True) or {}
+    video_url = data.get("video_url", "")
+    artist = data.get("artist", "Artist")
+    hook = data.get("hook", "WATCH THIS")
+    count = int(data.get("count", 5))
+    clip_seconds = int(data.get("clip_seconds", 15))
+
+    if "/uploads/music_videos/" not in video_url:
+        return jsonify({
+            "success": False,
+            "message": "Upload a real video file first. YouTube preview can be analyzed, but CL needs the actual MP4 to generate edited videos."
+        }), 400
+
+    filename = video_url.split("/uploads/music_videos/")[-1]
+    src = VIDEO_UPLOAD_DIR / filename
+
+    if not src.exists():
+        return jsonify({"success": False, "message": "Source video file not found."}), 404
+
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", str(src)],
+        capture_output=True, text=True
+    )
+
+    duration = float(json.loads(probe.stdout)["format"]["duration"])
+    step = max(1, duration / max(count, 1))
+
+    safe_artist = re.sub(r"[^a-zA-Z0-9_ -]", "", artist)[:30] or "Artist"
+    safe_hook = re.sub(r"[^a-zA-Z0-9_ !?.-]", "", hook).upper()[:44] or "WATCH THIS"
+
+    outputs = []
+
+    for i in range(count):
+        start = int(i * step)
+        if start + clip_seconds > duration:
+            start = max(0, int(duration - clip_seconds))
+
+        out_name = f"CL_generated_{safe_artist.replace(' ','_')}_{i+1}.mp4"
+        out_path = GENERATED_VIDEO_DIR / out_name
+
+        top_text = safe_hook if i == 0 else f"{safe_artist} - PART {i+1}"
+        bottom_text = "FOLLOW FOR MORE"
+
+        vf = (
+            "scale=1080:1920:force_original_aspect_ratio=increase,"
+            "crop=1080:1920,"
+            "eq=contrast=1.08:saturation=1.12,"
+            "drawbox=x=0:y=0:w=iw:h=180:color=black@0.45:t=fill,"
+            "drawbox=x=0:y=1740:w=iw:h=180:color=black@0.45:t=fill,"
+            f"drawtext=text='{top_text}':fontcolor=white:fontsize=58:"
+            "borderw=4:bordercolor=black:x=(w-text_w)/2:y=55,"
+            f"drawtext=text='{bottom_text}':fontcolor=white:fontsize=48:"
+            "borderw=4:bordercolor=black:x=(w-text_w)/2:y=1800"
+        )
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", str(start),
+            "-i", str(src),
+            "-t", str(clip_seconds),
+            "-vf", vf,
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-crf", "23",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            str(out_path)
+        ]
+
+        r = subprocess.run(cmd, capture_output=True, text=True)
+
+        if r.returncode == 0 and out_path.exists():
+            outputs.append({
+                "number": i + 1,
+                "start": start,
+                "duration": clip_seconds,
+                "filename": out_name,
+                "url": f"/uploads/generated_music_videos/{out_name}"
+            })
+
+    return jsonify({
+        "success": True,
+        "message": f"CL generated {len(outputs)} finished videos.",
+        "videos": outputs
+    })
+
+# =========================
+# MAKE ME CONTENT 2.0
+# creates finished videos + post packages + queue items
+# =========================
+
+@app.route("/music/video/make-content-2", methods=["POST"])
+def music_video_make_content_2():
+    import subprocess, json, re
+
+    data = request.get_json(silent=True) or {}
+    video_url = data.get("video_url", "")
+    artist = data.get("artist", "Artist")
+    song = data.get("song", "Music Video")
+    hook = data.get("hook", "WATCH THIS")
+    count = int(data.get("count", 5))
+    clip_seconds = int(data.get("clip_seconds", 15))
+
+    if "/uploads/music_videos/" not in video_url:
+        return jsonify({
+            "success": False,
+            "message": "Upload a real video file first. YouTube preview can be analyzed, but CL needs the actual MP4 to generate edited videos."
+        }), 400
+
+    filename = video_url.split("/uploads/music_videos/")[-1]
+    src = VIDEO_UPLOAD_DIR / filename
+
+    if not src.exists():
+        return jsonify({"success": False, "message": "Source video file not found."}), 404
+
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "json", str(src)],
+        capture_output=True, text=True
+    )
+
+    duration = float(json.loads(probe.stdout)["format"]["duration"])
+    step = max(1, duration / max(count, 1))
+
+    safe_artist = re.sub(r"[^a-zA-Z0-9_ -]", "", artist)[:30] or "Artist"
+    safe_hook = re.sub(r"[^a-zA-Z0-9_ !?.-]", "", hook).upper()[:44] or "WATCH THIS"
+
+    generated = []
+    queue = load_json(CL_PUBLISHING_QUEUE_FILE)
+
+    for i in range(count):
+        start = int(i * step)
+        if start + clip_seconds > duration:
+            start = max(0, int(duration - clip_seconds))
+
+        out_name = f"CL_content2_{safe_artist.replace(' ','_')}_{i+1}.mp4"
+        out_path = GENERATED_VIDEO_DIR / out_name
+
+        top_text = safe_hook if i == 0 else f"{safe_artist} - PART {i+1}"
+        bottom_text = "FOLLOW FOR MORE"
+
+        vf = (
+            "scale=1080:1920:force_original_aspect_ratio=increase,"
+            "crop=1080:1920,"
+            "eq=contrast=1.08:saturation=1.12,"
+            "drawbox=x=0:y=0:w=iw:h=190:color=black@0.45:t=fill,"
+            "drawbox=x=0:y=1735:w=iw:h=185:color=black@0.45:t=fill,"
+            f"drawtext=text='{top_text}':fontcolor=white:fontsize=58:"
+            "borderw=4:bordercolor=black:x=(w-text_w)/2:y=55,"
+            f"drawtext=text='{bottom_text}':fontcolor=white:fontsize=48:"
+            "borderw=4:bordercolor=black:x=(w-text_w)/2:y=1800"
+        )
+
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", str(start),
+            "-i", str(src),
+            "-t", str(clip_seconds),
+            "-vf", vf,
+            "-c:v", "libx264",
+            "-preset", "veryfast",
+            "-crf", "23",
+            "-c:a", "aac",
+            "-b:a", "128k",
+            str(out_path)
+        ]
+
+        r = subprocess.run(cmd, capture_output=True, text=True)
+
+        if r.returncode == 0 and out_path.exists():
+            gen_url = f"/uploads/generated_music_videos/{out_name}"
+
+            prompt = f"""
+You are Music Manager OS inside Capital Leverage.
+
+Create a ready-to-post package for this generated short video.
+
+Artist: {artist}
+Song/project: {song}
+Clip number: {i+1}
+Hook text on video: {top_text}
+Clip starts around: {start} seconds
+Platforms: YouTube Shorts, TikTok, Instagram Reels
+
+Return exactly:
+TITLE:
+ALT TITLES:
+1.
+2.
+3.
+HOOK:
+CAPTION:
+HASHTAGS:
+YOUTUBE SHORTS VERSION:
+TIKTOK VERSION:
+INSTAGRAM REELS VERSION:
+PINNED COMMENT:
+BEST POSTING TIME:
+"""
+            try:
+                result = ai_router(prompt, "business")
+                post_text = result.get("answer", str(result)) if isinstance(result, dict) else str(result)
+            except Exception:
+                post_text = f"""TITLE:
+{artist} - {song} Part {i+1}
+
+ALT TITLES:
+1. {safe_artist} is building something different
+2. They counted me out too early
+3. This one is for the real supporters
+
+HOOK:
+{top_text}
+
+CAPTION:
+This one came from pressure. Watch the full journey and follow for more. #SolidWorld #NewMusic
+
+HASHTAGS:
+#SolidWorld #NewMusic #YouTubeShorts #TikTokMusic #RapShorts #IndependentArtist
+
+YOUTUBE SHORTS VERSION:
+{artist} - {song} Part {i+1}. Follow for more.
+
+TIKTOK VERSION:
+This one is for everybody rebuilding. #SolidWorld #NewMusic
+
+INSTAGRAM REELS VERSION:
+New chapter. Same hunger. #SolidWorld #RapMusic
+
+PINNED COMMENT:
+Should I drop the full version?
+
+BEST POSTING TIME:
+7:30 PM
+"""
+
+            item = {
+                "id": str(int(datetime.now().timestamp() * 1000)) + f"_{i+1}",
+                "artist": artist,
+                "song": f"{song} - Generated Short {i+1}",
+                "video_url": gen_url,
+                "draft_text": post_text,
+                "platforms": ["YouTube Shorts", "TikTok", "Instagram Reels"],
+                "status": "Ready To Review",
+                "created_at": datetime.now().isoformat(),
+                "source": "Make Me Content 2.0",
+                "clip_start": start,
+                "clip_duration": clip_seconds
+            }
+
+            queue.append(item)
+
+            generated.append({
+                "number": i + 1,
+                "start": start,
+                "duration": clip_seconds,
+                "filename": out_name,
+                "url": gen_url,
+                "post_package": post_text,
+                "queue_item": item
+            })
+
+    save_json(CL_PUBLISHING_QUEUE_FILE, queue)
+
+    return jsonify({
+        "success": True,
+        "message": f"CL generated {len(generated)} finished videos and added them to the Publishing Queue.",
+        "videos": generated
+    })
+
+# =========================
+# CL POSTING DESK
+# =========================
+
+@app.route("/music/publishing-queue/update", methods=["POST"])
+def music_publishing_queue_update():
+    data = request.get_json(silent=True) or {}
+    item_id = str(data.get("id", ""))
+    patch = data.get("patch", {})
+
+    q = load_json(CL_PUBLISHING_QUEUE_FILE)
+    found = False
+
+    for item in q:
+        if str(item.get("id")) == item_id:
+            item.update(patch)
+            item["updated_at"] = datetime.now().isoformat()
+            found = True
+            break
+
+    if not found:
+        return jsonify({"success": False, "message": "Queue item not found."}), 404
+
+    save_json(CL_PUBLISHING_QUEUE_FILE, q)
+    return jsonify({"success": True, "message": "Posting Desk item updated."})
+
+# =========================
+# CL QUEUE ACTIONS
+# =========================
+
+@app.route("/music/publishing-queue/delete", methods=["POST"])
+def music_publishing_queue_delete():
+    data = request.get_json(silent=True) or {}
+    item_id = str(data.get("id", ""))
+
+    q = load_json(CL_PUBLISHING_QUEUE_FILE)
+    new_q = [item for item in q if str(item.get("id")) != item_id]
+
+    save_json(CL_PUBLISHING_QUEUE_FILE, new_q)
+
+    return jsonify({
+        "success": True,
+        "message": "Queue item deleted.",
+        "removed": len(q) - len(new_q)
+    })

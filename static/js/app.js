@@ -2321,3 +2321,2005 @@ async function syncYouTubeGlobal() {
     if (channelBox) channelBox.innerHTML = "YouTube sync failed: " + e;
   }
 }
+
+// =========================
+// GROWTH CAMPAIGN ENGINE
+// =========================
+
+async function runGrowthCampaignEngine() {
+  const out = document.getElementById("growth-campaign-answer") || document.getElementById("music-manager-control-answer");
+
+  const body = {
+    artist: document.getElementById("growth-artist")?.value || document.getElementById("music-artist-name")?.value || "",
+    genre: document.getElementById("growth-genre")?.value || document.getElementById("music-artist-genre")?.value || "",
+    song: document.getElementById("growth-song")?.value || document.getElementById("music-campaign-title")?.value || "",
+    goal: document.getElementById("growth-goal")?.value || document.getElementById("music-campaign-goal")?.value || "",
+    content_notes: document.getElementById("growth-content-notes")?.value || document.getElementById("music-campaign-input")?.value || "",
+    platforms: "YouTube Shorts, TikTok, Instagram Reels"
+  };
+
+  if (out) out.textContent = "Growth Campaign Engine is building the full campaign...";
+
+  try {
+    const res = await fetch("/music/growth-campaign", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (out) {
+      out.textContent = data.answer || data.message || JSON.stringify(data, null, 2);
+    }
+  } catch (e) {
+    if (out) out.textContent = "Growth Campaign Engine failed: " + e;
+  }
+}
+
+async function loadGrowthCampaigns() {
+  const out = document.getElementById("growth-campaign-answer") || document.getElementById("music-manager-control-answer");
+  if (out) out.textContent = "Loading saved growth campaigns...";
+
+  try {
+    const res = await fetch("/music/growth-campaigns");
+    const data = await res.json();
+
+    if (!data.length) {
+      if (out) out.textContent = "No growth campaigns saved yet.";
+      return;
+    }
+
+    if (out) {
+      out.textContent = data.map(c =>
+        `CAMPAIGN: ${c.song || c.artist || "Untitled"}\nSTATUS: ${c.status}\nDATE: ${c.created_at}\n\n${c.output}\n\n---\n`
+      ).join("\n");
+    }
+  } catch (e) {
+    if (out) out.textContent = "Could not load campaigns: " + e;
+  }
+}
+
+// =========================
+// MUSIC CAMPAIGN ACTION QUEUE
+// =========================
+
+
+
+// =========================
+// HARD FIXED CAMPAIGN ACTION QUEUE
+// =========================
+
+function escapeHtmlCL(str) {
+  return String(str || "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  }[m]));
+}
+
+async function buildCampaignActionQueue() {
+  const box = document.getElementById("music-action-queue-list");
+  const campaignBox = document.getElementById("growth-campaign-answer");
+
+  const campaignText = campaignBox ? campaignBox.textContent.trim() : "";
+  const artist =
+    document.getElementById("growth-artist")?.value ||
+    document.getElementById("music-artist-name")?.value ||
+    "";
+  const song =
+    document.getElementById("growth-song")?.value ||
+    document.getElementById("music-campaign-title")?.value ||
+    "";
+
+  if (box) box.innerHTML = "Building campaign action cards...";
+
+  if (!campaignText) {
+    if (box) box.innerHTML = "Run Growth Campaign first, then press Build Action Queue.";
+    return;
+  }
+
+  try {
+    const res = await fetch("/music/action-queue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        artist: artist,
+        song: song,
+        campaign_text: campaignText
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (box) box.innerHTML = "Action queue failed: " + JSON.stringify(data, null, 2);
+      return;
+    }
+
+    await loadCampaignActionQueue();
+  } catch (e) {
+    if (box) box.innerHTML = "Action queue error: " + e;
+  }
+}
+
+async function loadCampaignActionQueue() {
+  const box = document.getElementById("music-action-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading campaign action cards...";
+
+  try {
+    const res = await fetch("/music/action-queue");
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      box.innerHTML = "No campaign action cards yet.";
+      return;
+    }
+
+    const rows = data.slice().reverse().map((a) => {
+      const id = encodeURIComponent(a.id || "");
+      const day = escapeHtmlCL(a.day || "");
+      const platform = escapeHtmlCL(a.platform || "Platform");
+      const task = escapeHtmlCL(a.task || "Campaign task");
+      const status = escapeHtmlCL(a.status || "Draft");
+
+      return `
+        <div class="doc-card campaign-action-card">
+          <strong>${day} — ${platform}</strong><br>
+          ${task}<br>
+          <span>Status: <b>${status}</b></span>
+          <div class="command-buttons">
+            <button class="aq-btn" data-id="${id}" data-status="Approved">✅ Approve</button>
+            <button class="aq-btn" data-id="${id}" data-status="Done">🔥 Mark Done</button>
+            <button class="aq-btn" data-id="${id}" data-status="Needs Edit">✍️ Needs Edit</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    box.innerHTML = rows;
+
+    document.querySelectorAll(".aq-btn").forEach((btn) => {
+      btn.onclick = async () => {
+        const id = decodeURIComponent(btn.dataset.id || "");
+        const status = btn.dataset.status || "Draft";
+        await updateCampaignAction(id, status);
+      };
+    });
+  } catch (e) {
+    box.innerHTML = "Load queue error: " + e;
+  }
+}
+
+async function updateCampaignAction(id, status) {
+  try {
+    await fetch("/music/action-queue/update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status })
+    });
+    await loadCampaignActionQueue();
+  } catch (e) {
+    const box = document.getElementById("music-action-queue-list");
+    if (box) box.innerHTML = "Update queue error: " + e;
+  }
+}
+
+
+// =========================
+// CAMPAIGN CONTROL ROOM
+// =========================
+
+async function createCampaignProject() {
+  const campaignText = document.getElementById("growth-campaign-answer")?.textContent || "";
+  const artist = document.getElementById("growth-artist")?.value || document.getElementById("music-artist-name")?.value || "";
+  const song = document.getElementById("growth-song")?.value || document.getElementById("music-campaign-title")?.value || "";
+  const goal = document.getElementById("growth-goal")?.value || document.getElementById("music-campaign-goal")?.value || "";
+
+  const res = await fetch("/music/campaign-project", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ artist, song, goal, campaign_text: campaignText })
+  });
+
+  const data = await res.json();
+  if (data.success) {
+    showCampaignProject(data.project);
+    await loadCampaignProjects();
+  }
+}
+
+async function loadCampaignProjects() {
+  const box = document.getElementById("campaign-project-list");
+  if (box) box.innerHTML = "Loading campaign projects...";
+
+  const res = await fetch("/music/campaign-project");
+  const data = await res.json();
+
+  if (!data.length) {
+    if (box) box.innerHTML = "No campaign projects yet.";
+    return;
+  }
+
+  const latest = data[data.length - 1];
+  showCampaignProject(latest);
+
+  if (box) {
+    box.innerHTML = data.slice().reverse().map(p => `
+      <div class="doc-card">
+        <strong>${p.song || "Untitled Campaign"}</strong><br>
+        Artist: ${p.artist || "Unknown"}<br>
+        Status: ${p.status || "Draft"}<br>
+        Progress: ${p.progress || 0}%
+        <div class="command-buttons">
+          <button onclick='showCampaignProject(${JSON.stringify(p).replace(/'/g, "&apos;")})'>👁️ View</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+function showCampaignProject(p) {
+  document.getElementById("campaign-screen-title").textContent = p.song || "Campaign Project";
+  document.getElementById("campaign-screen-subtitle").textContent =
+    `${p.artist || "Artist"} — ${p.goal || "Growth campaign"}`;
+
+  const progress = Number(p.progress || 0);
+  document.getElementById("campaign-progress-fill").style.width = progress + "%";
+  document.getElementById("campaign-progress-text").textContent = progress + "%";
+
+  document.getElementById("campaign-drafts-count").textContent = p.posts_planned || 0;
+  document.getElementById("campaign-approved-count").textContent = p.posts_approved || 0;
+  document.getElementById("campaign-posted-count").textContent = p.posts_done || 0;
+}
+
+// =========================
+// SIMPLE WORKING DRAFT STUDIO
+// =========================
+
+let currentDraftId = null;
+
+function safeTextCL(v) {
+  return String(v || "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+  }[m]));
+}
+
+async function buildDraftFromActionCard(action) {
+  const status = document.getElementById("draft-studio-status");
+  const content = document.getElementById("draft-studio-content");
+
+  if (status) status.textContent = "CL is building the draft...";
+  if (content) content.value = "";
+
+  try {
+    const res = await fetch("/music/post-builder", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        artist: action.artist || document.getElementById("music-artist-name")?.value || "",
+        song: action.song || document.getElementById("music-campaign-title")?.value || "",
+        platform: action.platform || "",
+        task: action.task || "",
+        campaign_text: action.campaign_text || document.getElementById("growth-campaign-answer")?.textContent || ""
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = "Draft failed: " + JSON.stringify(data, null, 2);
+      return;
+    }
+
+    currentDraftId = data.draft.id;
+
+    if (content) content.value = data.answer || data.draft.draft_text || "";
+    if (status) status.textContent = "Draft built. Now you can rewrite or approve it.";
+
+    await loadPostDrafts();
+  } catch (e) {
+    if (status) status.textContent = "Draft error: " + e;
+  }
+}
+
+async function rewriteDraftWithAI() {
+  const content = document.getElementById("draft-studio-content");
+  const instruction = document.getElementById("draft-studio-instruction");
+  const status = document.getElementById("draft-studio-status");
+
+  if (!content || !content.value.trim()) {
+    if (status) status.textContent = "Build a draft first.";
+    return;
+  }
+
+  if (status) status.textContent = "AI is rewriting the draft...";
+
+  try {
+    const res = await fetch("/music/post-builder/rewrite", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        draft_text: content.value,
+        instruction: instruction?.value || "Make it stronger and more viral."
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      content.value = data.answer;
+      if (status) status.textContent = "Draft rewritten.";
+    } else {
+      if (status) status.textContent = "Rewrite failed.";
+    }
+  } catch (e) {
+    if (status) status.textContent = "Rewrite error: " + e;
+  }
+}
+
+async function approveDraftStudio() {
+  const status = document.getElementById("draft-studio-status");
+
+  if (!currentDraftId) {
+    if (status) status.textContent = "Build a draft first before approving.";
+    return;
+  }
+
+  await fetch("/music/post-builder/update", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({id: currentDraftId, status: "Approved"})
+  });
+
+  if (status) status.textContent = "Draft approved.";
+  await loadPostDrafts();
+}
+
+// force action queue cards to show Build Draft button
+async function loadCampaignActionQueue() {
+  const box = document.getElementById("music-action-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading post cards...";
+
+  try {
+    const res = await fetch("/music/action-queue");
+    const data = await res.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      box.innerHTML = "No post cards yet. Press Build Post Cards first.";
+      return;
+    }
+
+    box.innerHTML = data.slice().reverse().slice(0, 7).map((a, index) => {
+      window["campaignAction_" + index] = a;
+
+      return `
+        <div class="doc-card campaign-action-card">
+          <strong>${safeTextCL(a.day)} — ${safeTextCL(a.platform || "Platform")}</strong><br>
+          ${safeTextCL(a.task || "Campaign task")}<br>
+          <span>Status: <b>${safeTextCL(a.status || "Draft")}</b></span>
+          <div class="command-buttons">
+            <button onclick="buildDraftFromActionCard(window.campaignAction_${index})">📤 Build Draft</button>
+            <button onclick="updateCampaignAction('${safeTextCL(a.id)}', 'Approved')">✅ Approve Task</button>
+            <button onclick="updateCampaignAction('${safeTextCL(a.id)}', 'Done')">🔥 Mark Done</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (e) {
+    box.innerHTML = "Load queue error: " + e;
+  }
+}
+
+// =========================
+// CL VIDEO TV STUDIO
+// =========================
+
+let clUploadedVideoUrl = "";
+
+async function uploadCLVideo() {
+  const fileInput = document.getElementById("cl-video-file");
+  const status = document.getElementById("cl-video-status");
+  const player = document.getElementById("cl-video-player");
+
+  if (!fileInput || !fileInput.files.length) {
+    if (status) status.textContent = "Choose a video first.";
+    return;
+  }
+
+  const form = new FormData();
+  form.append("video", fileInput.files[0]);
+
+  if (status) status.textContent = "Uploading video...";
+
+  try {
+    const res = await fetch("/music/video/upload", {
+      method: "POST",
+      body: form
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = data.message || "Upload failed.";
+      return;
+    }
+
+    clUploadedVideoUrl = data.url;
+
+    if (player) {
+      player.src = data.url;
+      player.load();
+    }
+
+    if (status) status.textContent = "Video loaded in CL TV Studio.";
+  } catch (e) {
+    if (status) status.textContent = "Upload error: " + e;
+  }
+}
+
+async function buildVideoPostPackage() {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  const artist =
+    document.getElementById("cl-video-artist")?.value ||
+    document.getElementById("music-artist-name")?.value ||
+    "";
+
+  const song =
+    document.getElementById("cl-video-song")?.value ||
+    document.getElementById("music-campaign-title")?.value ||
+    "";
+
+  const notes =
+    document.getElementById("cl-video-notes")?.value ||
+    "";
+
+  if (out) out.value = "CL is building the post package...";
+  if (status) status.textContent = "AI writing title, caption, hashtags, and platform versions...";
+
+  try {
+    const res = await fetch("/music/video/ai-draft", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        artist,
+        song,
+        notes,
+        video_url: clUploadedVideoUrl,
+        platform: "YouTube Shorts, TikTok, Instagram Reels"
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      if (out) out.value = data.answer;
+      if (status) status.textContent = "Post package ready.";
+    } else {
+      if (out) out.value = "AI draft failed.";
+    }
+  } catch (e) {
+    if (out) out.value = "AI draft error: " + e;
+  }
+}
+
+// =========================
+// YOUTUBE MARKET SCANNER
+// =========================
+
+async function runYouTubeMarketScan() {
+  const out = document.getElementById("market-scan-output");
+  const results = document.getElementById("market-video-results");
+
+  const artist = document.getElementById("market-artist")?.value || document.getElementById("music-artist-name")?.value || "";
+  const genre = document.getElementById("market-genre")?.value || document.getElementById("music-artist-genre")?.value || "rap music";
+  const keyword = document.getElementById("market-keyword")?.value || "";
+
+  if (out) out.value = "Scanning YouTube market and building original content strategy...";
+  if (results) results.innerHTML = "Loading top market videos...";
+
+  try {
+    const res = await fetch("/music/youtube/market-scan", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({artist, genre, keyword})
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (out) out.value = data.message || "Market scan failed.";
+      return;
+    }
+
+    if (results) {
+      results.innerHTML = data.videos.map(v => `
+        <div class="doc-card music-video-card">
+          ${v.thumbnail ? `<img src="${v.thumbnail}" alt="">` : ""}
+          <strong>${v.title}</strong><br>
+          Channel: ${v.channel}<br>
+          Views: ${v.views} | Likes: ${v.likes} | Comments: ${v.comments}
+        </div>
+      `).join("");
+    }
+
+    if (out) out.value = data.answer;
+  } catch (e) {
+    if (out) out.value = "Market scan error: " + e;
+  }
+}
+
+// =========================
+// CL PUBLISHING QUEUE + 10 SHORTS ENGINE
+// =========================
+
+async function sendVideoDraftToCLQueue() {
+  const status = document.getElementById("cl-video-status");
+  const draft = document.getElementById("cl-video-draft")?.value || "";
+
+  const body = {
+    artist: document.getElementById("cl-video-artist")?.value || document.getElementById("music-artist-name")?.value || "",
+    song: document.getElementById("cl-video-song")?.value || document.getElementById("music-campaign-title")?.value || "",
+    video_url: clUploadedVideoUrl || "",
+    draft_text: draft,
+    platforms: ["YouTube Shorts", "TikTok", "Instagram Reels"]
+  };
+
+  if (!draft.trim()) {
+    if (status) status.textContent = "Build a post package first.";
+    return;
+  }
+
+  const res = await fetch("/music/publishing-queue", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (status) {
+    status.textContent = data.success
+      ? "Added to CL Publishing Queue."
+      : "Queue failed.";
+  }
+}
+
+async function repurposeVideoInto10Shorts() {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  const body = {
+    artist: document.getElementById("cl-video-artist")?.value || document.getElementById("music-artist-name")?.value || "",
+    song: document.getElementById("cl-video-song")?.value || document.getElementById("music-campaign-title")?.value || "",
+    notes: document.getElementById("cl-video-notes")?.value || "",
+    draft_text: out?.value || ""
+  };
+
+  if (out) out.value = "CL is turning this one video into 10 Shorts...";
+  if (status) status.textContent = "Building 10 Shorts plan...";
+
+  const res = await fetch("/music/video/repurpose-10-shorts", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (out) out.value = data.answer || "No output.";
+  if (status) status.textContent = "10 Shorts plan ready.";
+}
+
+// =========================
+// CL PUBLISHING QUEUE SCREEN
+// =========================
+
+async function loadCLPublishingQueue() {
+  const box = document.getElementById("cl-publishing-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading CL Publishing Queue...";
+
+  try {
+    const res = await fetch("/music/publishing-queue");
+    const data = await res.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      box.innerHTML = "No posts in queue yet.";
+      return;
+    }
+
+    box.innerHTML = data.slice().reverse().map(item => `
+      <div class="doc-card cl-queue-card">
+        <strong>${item.song || "Untitled Post"}</strong><br>
+        Artist: ${item.artist || "Unknown"}<br>
+        Status: <b>${item.status || "Queued"}</b><br>
+        Platforms: ${(item.platforms || []).join(", ")}<br>
+        ${item.video_url ? `<video controls playsinline src="${item.video_url}" class="queue-video-preview"></video>` : ""}
+        <pre>${item.draft_text || ""}</pre>
+        <div class="command-buttons">
+          <button onclick="alert('YouTube upload is next build.')">📤 Post to YouTube</button>
+          <button onclick="alert('n8n webhook is next build.')">⚙️ Send to n8n</button>
+          <button onclick="copyTextRaw(\`${(item.draft_text || "").replace(/`/g, "\\`")}\`)">Copy Draft</button>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (e) {
+    box.innerHTML = "Queue load error: " + e;
+  }
+}
+
+async function clearCLPublishingQueueConfirm() {
+  if (!confirm("Clear the whole CL Publishing Queue?")) return;
+
+  await fetch("/music/publishing-queue/clear", { method: "POST" });
+  await loadCLPublishingQueue();
+}
+
+function copyTextRaw(text) {
+  navigator.clipboard.writeText(text || "");
+  alert("Copied.");
+}
+
+// =========================
+// YOUTUBE UPLOAD FROM CL QUEUE
+// =========================
+
+async function postQueueItemToYouTube(id) {
+  if (!confirm("Upload this video to YouTube as PRIVATE?")) return;
+
+  const res = await fetch("/music/publishing-queue/youtube-upload", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id })
+  });
+
+  const data = await res.json();
+
+  alert(data.message || JSON.stringify(data, null, 2));
+  await loadCLPublishingQueue();
+}
+
+// override queue loader with real YouTube upload button
+async function loadCLPublishingQueue() {
+  const box = document.getElementById("cl-publishing-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading CL Publishing Queue...";
+
+  try {
+    const res = await fetch("/music/publishing-queue");
+    const data = await res.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      box.innerHTML = "No posts in queue yet.";
+      return;
+    }
+
+    box.innerHTML = data.slice().reverse().map(item => `
+      <div class="doc-card cl-queue-card">
+        <strong>${item.song || "Untitled Post"}</strong><br>
+        Artist: ${item.artist || "Unknown"}<br>
+        Status: <b>${item.status || "Queued"}</b><br>
+        Platforms: ${(item.platforms || []).join(", ")}<br>
+        ${item.youtube_url ? `<a href="${item.youtube_url}" target="_blank">Open YouTube Upload</a><br>` : ""}
+        ${item.video_url ? `<video controls playsinline src="${item.video_url}" class="queue-video-preview"></video>` : ""}
+        <pre>${item.draft_text || ""}</pre>
+        <div class="command-buttons">
+          <button onclick="postQueueItemToYouTube('${item.id}')">📤 Post to YouTube Private</button>
+          <button onclick="copyTextRaw(\`${(item.draft_text || "").replace(/`/g, "\\`")}\`)">Copy Draft</button>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (e) {
+    box.innerHTML = "Queue load error: " + e;
+  }
+}
+
+// =========================
+// YOUTUBE VIDEO IMPORTER
+// =========================
+
+async function importYouTubeVideoToCL() {
+  const status = document.getElementById("cl-video-status");
+  const player = document.getElementById("cl-video-player");
+  const url = prompt("Paste your YouTube video URL:");
+
+  if (!url) return;
+
+  if (status) status.textContent = "Downloading your YouTube video into CL...";
+
+  const res = await fetch("/music/youtube/import-video", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({url})
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    if (status) status.textContent = data.message || "Import failed.";
+    alert(data.error || data.message || "Import failed.");
+    return;
+  }
+
+  clUploadedVideoUrl = data.url;
+
+  if (player) {
+    player.src = data.url;
+    player.load();
+  }
+
+  if (status) status.textContent = "Video imported into CL TV Studio.";
+}
+
+// =========================
+// FFMPEG 10 SHORTS CLIP CUTTER
+// =========================
+
+async function create10ShortClips() {
+  const status = document.getElementById("cl-video-status");
+  const out = document.getElementById("cl-video-draft");
+
+  if (!clUploadedVideoUrl) {
+    if (status) status.textContent = "Upload or import a video first.";
+    return;
+  }
+
+  if (status) status.textContent = "CL is cutting 10 vertical Shorts...";
+  if (out) out.value = "Creating 10 short clips with FFmpeg...";
+
+  const res = await fetch("/music/video/create-10-shorts", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      video_url: clUploadedVideoUrl,
+      count: 10,
+      clip_seconds: 15
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    if (status) status.textContent = data.message || "Clip export failed.";
+    return;
+  }
+
+  if (status) status.textContent = data.message;
+
+  const html = data.shorts.map(s => `
+SHORT ${s.number}
+Start: ${s.start}s
+Length: ${s.duration}s
+Video: ${location.origin}${s.url}
+`).join("\n");
+
+  if (out) out.value = html;
+
+  const queueBox = document.getElementById("cl-publishing-queue-list");
+  if (queueBox) {
+    queueBox.innerHTML = data.shorts.map(s => `
+      <div class="doc-card cl-queue-card">
+        <strong>Short ${s.number}</strong><br>
+        Start: ${s.start}s<br>
+        <video controls playsinline src="${s.url}" class="queue-video-preview"></video>
+        <div class="command-buttons">
+          <button onclick="navigator.clipboard.writeText('${location.origin}${s.url}')">Copy Video Link</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+// =========================
+// FIXED YOUTUBE IMPORT TO CL
+// =========================
+
+async function importYouTubeUrlToCL() {
+  const status = document.getElementById("cl-video-status");
+  const player = document.getElementById("cl-video-player");
+
+  const url = prompt("Paste your YouTube video URL:");
+
+  if (!url) return;
+
+  if (status) status.textContent = "Importing YouTube video into CL...";
+
+  try {
+    const res = await fetch("/music/youtube/import-url", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({url})
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = data.message || "Import failed.";
+      alert(data.error || data.message || "Import failed.");
+      return;
+    }
+
+    clUploadedVideoUrl = data.url;
+
+    if (player) {
+      player.src = data.url;
+      player.load();
+    }
+
+    if (status) status.textContent = "YouTube video imported and loaded in CL TV Studio.";
+  } catch (e) {
+    if (status) status.textContent = "Import error: " + e;
+  }
+}
+
+// =========================
+// HARD FIX: CL VIDEO TV BUTTONS
+// =========================
+
+function clSetVideo(url, message) {
+  clUploadedVideoUrl = url || clUploadedVideoUrl || "";
+  const player = document.getElementById("cl-video-player");
+  const status = document.getElementById("cl-video-status");
+
+  if (player && clUploadedVideoUrl) {
+    player.src = clUploadedVideoUrl;
+    player.load();
+  }
+
+  if (status) status.textContent = message || "Video loaded.";
+}
+
+async function uploadCLVideo() {
+  const fileInput = document.getElementById("cl-video-file");
+  const status = document.getElementById("cl-video-status");
+
+  if (!fileInput || !fileInput.files.length) {
+    if (status) status.textContent = "Choose a video first.";
+    return;
+  }
+
+  const form = new FormData();
+  form.append("video", fileInput.files[0]);
+
+  if (status) status.textContent = "Uploading video...";
+
+  try {
+    const res = await fetch("/music/video/upload", { method: "POST", body: form });
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = data.message || "Upload failed.";
+      return;
+    }
+
+    clSetVideo(data.url, "Video uploaded and loaded in CL TV Studio.");
+  } catch (e) {
+    if (status) status.textContent = "Upload error: " + e;
+  }
+}
+
+async function importYouTubeUrlToCL() {
+  const status = document.getElementById("cl-video-status");
+  const url = prompt("Paste your YouTube video URL:");
+
+  if (!url) return;
+  if (status) status.textContent = "Importing YouTube video into CL...";
+
+  try {
+    const res = await fetch("/music/youtube/import-url", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({url})
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = data.message || "Import failed.";
+      alert(data.error || data.message || "Import failed.");
+      return;
+    }
+
+    clSetVideo(data.url, "YouTube video imported into CL TV Studio.");
+  } catch (e) {
+    if (status) status.textContent = "Import error: " + e;
+  }
+}
+
+async function buildVideoPostPackage() {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  const artist = document.getElementById("cl-video-artist")?.value || document.getElementById("music-artist-name")?.value || "";
+  const song = document.getElementById("cl-video-song")?.value || document.getElementById("music-campaign-title")?.value || "";
+  const notes = document.getElementById("cl-video-notes")?.value || "";
+
+  if (out) out.value = "CL is building title, caption, hashtags, and platform drafts...";
+  if (status) status.textContent = "Building post package...";
+
+  try {
+    const res = await fetch("/music/video/ai-draft", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        artist, song, notes,
+        video_url: clUploadedVideoUrl,
+        platform: "YouTube Shorts, TikTok, Instagram Reels"
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      if (out) out.value = data.answer;
+      if (status) status.textContent = "Post package ready.";
+    } else {
+      if (out) out.value = data.message || "Post package failed.";
+    }
+  } catch (e) {
+    if (out) out.value = "Post package error: " + e;
+  }
+}
+
+async function repurposeVideoInto10Shorts() {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  const body = {
+    artist: document.getElementById("cl-video-artist")?.value || document.getElementById("music-artist-name")?.value || "",
+    song: document.getElementById("cl-video-song")?.value || document.getElementById("music-campaign-title")?.value || "",
+    notes: document.getElementById("cl-video-notes")?.value || "",
+    draft_text: out?.value || ""
+  };
+
+  if (out) out.value = "CL is turning this video into a 10 Shorts content plan...";
+  if (status) status.textContent = "Building 10 Shorts plan...";
+
+  try {
+    const res = await fetch("/music/video/repurpose-10-shorts", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    if (out) out.value = data.answer || data.message || "No output.";
+    if (status) status.textContent = data.success ? "10 Shorts plan ready." : "10 Shorts plan failed.";
+  } catch (e) {
+    if (out) out.value = "10 Shorts plan error: " + e;
+  }
+}
+
+async function create10ShortClips() {
+  const status = document.getElementById("cl-video-status");
+  const out = document.getElementById("cl-video-draft");
+
+  if (!clUploadedVideoUrl) {
+    if (status) status.textContent = "Upload or import a video first.";
+    return;
+  }
+
+  if (status) status.textContent = "CL is cutting 10 vertical Shorts...";
+  if (out) out.value = "Creating 10 short clips with FFmpeg...";
+
+  try {
+    const res = await fetch("/music/video/create-10-shorts", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        video_url: clUploadedVideoUrl,
+        count: 10,
+        clip_seconds: 15
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = data.message || "Clip export failed.";
+      if (out) out.value = data.message || "Clip export failed.";
+      return;
+    }
+
+    if (status) status.textContent = data.message;
+
+    if (out) {
+      out.value = data.shorts.map(s =>
+`SHORT ${s.number}
+Start: ${s.start}s
+Length: ${s.duration}s
+Video: ${location.origin}${s.url}`
+      ).join("\n\n");
+    }
+
+    const queueBox = document.getElementById("cl-publishing-queue-list");
+    if (queueBox) {
+      queueBox.innerHTML = data.shorts.map(s => `
+        <div class="doc-card cl-queue-card">
+          <strong>Exported Short ${s.number}</strong><br>
+          Start: ${s.start}s | Length: ${s.duration}s<br>
+          <video controls playsinline src="${s.url}" class="queue-video-preview"></video>
+          <div class="command-buttons">
+            <button onclick="addShortClipToCLQueue('${s.url}', 'Short ${s.number}')">📤 Add This Short to Queue</button>
+            <button onclick="navigator.clipboard.writeText('${location.origin}${s.url}')">Copy Video Link</button>
+          </div>
+        </div>
+      `).join("");
+    }
+  } catch (e) {
+    if (status) status.textContent = "Clip export error: " + e;
+  }
+}
+
+async function addShortClipToCLQueue(videoUrl, label) {
+  const draft = document.getElementById("cl-video-draft")?.value || "";
+  const body = {
+    artist: document.getElementById("cl-video-artist")?.value || document.getElementById("music-artist-name")?.value || "",
+    song: label || document.getElementById("cl-video-song")?.value || "Short Clip",
+    video_url: videoUrl,
+    draft_text: draft,
+    platforms: ["YouTube Shorts", "TikTok", "Instagram Reels"]
+  };
+
+  const res = await fetch("/music/publishing-queue", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  alert(data.success ? "Short added to CL Publishing Queue." : "Queue failed.");
+  await loadCLPublishingQueue();
+}
+
+async function sendVideoDraftToCLQueue() {
+  const status = document.getElementById("cl-video-status");
+  const draft = document.getElementById("cl-video-draft")?.value || "";
+
+  if (!clUploadedVideoUrl) {
+    if (status) status.textContent = "Upload/import/export a video first.";
+    return;
+  }
+
+  const body = {
+    artist: document.getElementById("cl-video-artist")?.value || document.getElementById("music-artist-name")?.value || "",
+    song: document.getElementById("cl-video-song")?.value || document.getElementById("music-campaign-title")?.value || "Music Post",
+    video_url: clUploadedVideoUrl,
+    draft_text: draft,
+    platforms: ["YouTube Shorts", "TikTok", "Instagram Reels"]
+  };
+
+  const res = await fetch("/music/publishing-queue", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  if (status) status.textContent = data.success ? "Added to CL Publishing Queue." : "Queue failed.";
+  await loadCLPublishingQueue();
+}
+
+// =========================
+// MY YOUTUBE VIDEO PICKER
+// =========================
+
+async function loadMyYouTubeVideosForImport() {
+  const box = document.getElementById("youtube-picker-results");
+  const status = document.getElementById("cl-video-status");
+
+  if (box) box.innerHTML = "Loading your YouTube videos...";
+  if (status) status.textContent = "Getting videos from your connected YouTube channel...";
+
+  try {
+    const res = await fetch("/music/youtube/my-videos-picker");
+    const data = await res.json();
+
+    if (!data.success) {
+      if (box) box.innerHTML = data.message || "Could not load videos.";
+      return;
+    }
+
+    box.innerHTML = data.videos.map(v => `
+      <div class="doc-card youtube-picker-card">
+        ${v.thumbnail ? `<img src="${v.thumbnail}" class="youtube-picker-thumb">` : ""}
+        <strong>${v.title}</strong><br>
+        <small>${v.published_at || ""}</small>
+        <div class="command-buttons">
+          <button onclick="importSelectedYouTubeVideo('${v.url.replace(/'/g, "\\'")}')">📥 Import This Video</button>
+        </div>
+      </div>
+    `).join("");
+
+    if (status) status.textContent = "Pick a YouTube video to import.";
+  } catch (e) {
+    if (box) box.innerHTML = "Picker error: " + e;
+  }
+}
+
+async function importSelectedYouTubeVideo(url) {
+  const status = document.getElementById("cl-video-status");
+  const player = document.getElementById("cl-video-player");
+
+  if (status) status.textContent = "Downloading selected YouTube video into CL...";
+
+  try {
+    const res = await fetch("/music/youtube/import-url", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({url})
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      if (status) status.textContent = data.message || "Import failed.";
+      alert(data.error || data.message || "Import failed.");
+      return;
+    }
+
+    clUploadedVideoUrl = data.url;
+
+    if (player) {
+      player.src = data.url;
+      player.load();
+    }
+
+    if (status) status.textContent = "Selected YouTube video imported into CL.";
+  } catch (e) {
+    if (status) status.textContent = "Import error: " + e;
+  }
+}
+
+// =========================
+// ANALYZE FROM YOUTUBE
+// =========================
+
+let selectedYouTubeVideoForCL = null;
+
+async function analyzeSelectedYouTubeVideo(v) {
+  selectedYouTubeVideoForCL = v;
+
+  const status = document.getElementById("cl-video-status");
+  const out = document.getElementById("cl-video-draft");
+
+  const artistInput = document.getElementById("cl-video-artist");
+  const songInput = document.getElementById("cl-video-song");
+  const notesInput = document.getElementById("cl-video-notes");
+
+  if (artistInput && !artistInput.value) artistInput.value = document.getElementById("music-artist-name")?.value || "";
+  if (songInput) songInput.value = v.title || "";
+  if (notesInput) notesInput.value = `Selected from YouTube: ${v.url}`;
+
+  if (status) status.textContent = "Analyzing selected YouTube video...";
+  if (out) out.value = "CL is analyzing this YouTube video and building a content package...";
+
+  const res = await fetch("/music/youtube/analyze-video", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      video_id: v.id,
+      title: v.title,
+      url: v.url,
+      artist: artistInput?.value || "",
+      description: v.description || ""
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    if (status) status.textContent = data.message || "Analyze failed.";
+    if (out) out.value = data.message || "Analyze failed.";
+    return;
+  }
+
+  if (out) out.value = data.answer;
+  if (status) status.textContent = "YouTube video analyzed. Upload original file if you want real clip exports.";
+}
+
+async function loadMyYouTubeVideosForImport() {
+  const box = document.getElementById("youtube-picker-results");
+  const status = document.getElementById("cl-video-status");
+
+  if (box) box.innerHTML = "Loading your YouTube videos...";
+  if (status) status.textContent = "Getting videos from your connected YouTube channel...";
+
+  try {
+    const res = await fetch("/music/youtube/my-videos-picker");
+    const data = await res.json();
+
+    if (!data.success) {
+      if (box) box.innerHTML = data.message || "Could not load videos.";
+      return;
+    }
+
+    box.innerHTML = data.videos.map((v, i) => {
+      window["ytPick_" + i] = v;
+      return `
+        <div class="doc-card youtube-picker-card">
+          ${v.thumbnail ? `<img src="${v.thumbnail}" class="youtube-picker-thumb">` : ""}
+          <strong>${v.title}</strong><br>
+          <small>${v.published_at || ""}</small><br>
+          <small>${v.url || ""}</small>
+          <div class="command-buttons">
+            <button onclick="analyzeSelectedYouTubeVideo(window.ytPick_${i})">🧠 Analyze This Video</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    if (status) status.textContent = "Pick a YouTube video to analyze.";
+  } catch (e) {
+    if (box) box.innerHTML = "Picker error: " + e;
+  }
+}
+
+// =========================
+// YOUTUBE EMBED PREVIEW FIX
+// =========================
+
+function showYouTubePreviewInTV(videoId) {
+  const player = document.getElementById("cl-video-player");
+  const iframe = document.getElementById("cl-youtube-embed-preview");
+
+  if (player) {
+    player.pause?.();
+    player.removeAttribute("src");
+    player.style.display = "none";
+  }
+
+  if (iframe && videoId) {
+    iframe.src = `https://www.youtube.com/embed/${videoId}`;
+    iframe.style.display = "block";
+  }
+}
+
+function showUploadedVideoInTV(url) {
+  const player = document.getElementById("cl-video-player");
+  const iframe = document.getElementById("cl-youtube-embed-preview");
+
+  if (iframe) {
+    iframe.src = "";
+    iframe.style.display = "none";
+  }
+
+  if (player && url) {
+    player.style.display = "block";
+    player.src = url;
+    player.load();
+  }
+}
+
+// patch analyzer to show YouTube preview
+const oldAnalyzeSelectedYouTubeVideo = analyzeSelectedYouTubeVideo;
+analyzeSelectedYouTubeVideo = async function(v) {
+  showYouTubePreviewInTV(v.id);
+  return oldAnalyzeSelectedYouTubeVideo(v);
+};
+
+// patch uploaded/imported file preview
+const oldClSetVideo = clSetVideo;
+clSetVideo = function(url, message) {
+  showUploadedVideoInTV(url);
+  return oldClSetVideo(url, message);
+};
+
+// =========================
+// YOUTUBE CAMPAIGN SAVE + SMART EDIT PLAN
+// =========================
+
+async function saveYouTubeAnalysisCampaign() {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  if (!selectedYouTubeVideoForCL) {
+    alert("Pick and analyze a YouTube video first.");
+    return;
+  }
+
+  const body = {
+    title: selectedYouTubeVideoForCL.title || document.getElementById("cl-video-song")?.value || "YouTube Campaign",
+    artist: document.getElementById("cl-video-artist")?.value || "",
+    youtube_url: selectedYouTubeVideoForCL.url || "",
+    video_id: selectedYouTubeVideoForCL.id || "",
+    analysis: out?.value || ""
+  };
+
+  const res = await fetch("/music/youtube/campaigns", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  if (status) status.textContent = data.success ? "YouTube analysis saved as campaign." : "Save failed.";
+}
+
+async function loadYouTubeAnalysisCampaigns() {
+  const box = document.getElementById("youtube-picker-results");
+  if (!box) return;
+
+  box.innerHTML = "Loading saved YouTube campaigns...";
+
+  const res = await fetch("/music/youtube/campaigns");
+  const data = await res.json();
+
+  if (!Array.isArray(data) || !data.length) {
+    box.innerHTML = "No saved YouTube campaigns yet.";
+    return;
+  }
+
+  box.innerHTML = data.slice().reverse().map((c, i) => {
+    window["ytCampaign_" + i] = c;
+    return `
+      <div class="doc-card youtube-picker-card">
+        <strong>${c.title}</strong><br>
+        Artist: ${c.artist || "Unknown"}<br>
+        Status: ${c.status || "Saved"}<br>
+        <small>${c.youtube_url || ""}</small>
+        <div class="command-buttons">
+          <button onclick="loadSavedYouTubeCampaign(window.ytCampaign_${i})">📂 Open</button>
+          <button onclick="buildSmartEditPlanFromCampaign(window.ytCampaign_${i})">🎬 Smart Edit Plan</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function loadSavedYouTubeCampaign(c) {
+  selectedYouTubeVideoForCL = {
+    id: c.video_id,
+    title: c.title,
+    url: c.youtube_url
+  };
+
+  document.getElementById("cl-video-song").value = c.title || "";
+  document.getElementById("cl-video-notes").value = `Saved YouTube campaign: ${c.youtube_url || ""}`;
+  document.getElementById("cl-video-draft").value = c.analysis || "";
+  document.getElementById("cl-video-status").textContent = "Saved campaign loaded.";
+
+  if (c.video_id && typeof showYouTubePreviewInTV === "function") {
+    showYouTubePreviewInTV(c.video_id);
+  }
+}
+
+async function buildSmartEditPlanFromCampaign(c=null) {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  const active = c || {
+    title: document.getElementById("cl-video-song")?.value || "",
+    artist: document.getElementById("cl-video-artist")?.value || "",
+    analysis: out?.value || "",
+  };
+
+  if (out) out.value = "CL is building the smart edit plan...";
+  if (status) status.textContent = "Building smart edit plan...";
+
+  const res = await fetch("/music/video/smart-edit-plan", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      artist: active.artist || document.getElementById("cl-video-artist")?.value || "",
+      title: active.title || document.getElementById("cl-video-song")?.value || "",
+      notes: document.getElementById("cl-video-notes")?.value || "",
+      analysis: active.analysis || ""
+    })
+  });
+
+  const data = await res.json();
+  if (out) out.value = data.answer || data.message || "No output.";
+  if (status) status.textContent = data.success ? "Smart edit plan ready." : "Smart edit plan failed.";
+}
+
+// HARD FIX VIDEO PLAYBACK SWITCH
+function showYouTubePreviewInTV(videoId) {
+  const player = document.getElementById("cl-video-player");
+  const iframe = document.getElementById("cl-youtube-embed-preview");
+
+  if (player) {
+    player.pause?.();
+    player.src = "";
+    player.style.display = "none";
+  }
+
+  if (iframe) {
+    iframe.style.display = "block";
+    iframe.src = `https://www.youtube.com/embed/${videoId}?playsinline=1&rel=0`;
+  }
+}
+
+function showUploadedVideoInTV(url) {
+  const player = document.getElementById("cl-video-player");
+  const iframe = document.getElementById("cl-youtube-embed-preview");
+
+  if (iframe) {
+    iframe.src = "";
+    iframe.style.display = "none";
+  }
+
+  if (player) {
+    player.style.display = "block";
+    player.src = url;
+    player.load();
+  }
+}
+
+function clSetVideo(url, message) {
+  clUploadedVideoUrl = url || "";
+  showUploadedVideoInTV(clUploadedVideoUrl);
+  const status = document.getElementById("cl-video-status");
+  if (status) status.textContent = message || "Video loaded.";
+}
+
+// SIMPLE YOUTUBE LINK ANALYZE
+function getYouTubeIdFromUrl(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.replace("/", "");
+    if (u.searchParams.get("v")) return u.searchParams.get("v");
+    if (u.pathname.includes("/shorts/")) return u.pathname.split("/shorts/")[1].split("/")[0];
+  } catch(e) {}
+  return "";
+}
+
+async function analyzeYouTubeLinkSimple() {
+  const input = document.getElementById("cl-youtube-url-input");
+  const status = document.getElementById("cl-video-status");
+  const out = document.getElementById("cl-video-draft");
+
+  const url = input?.value?.trim();
+  const videoId = getYouTubeIdFromUrl(url);
+
+  if (!url || !videoId) {
+    if (status) status.textContent = "Paste a valid YouTube link first.";
+    return;
+  }
+
+  selectedYouTubeVideoForCL = {
+    id: videoId,
+    title: document.getElementById("cl-video-song")?.value || "YouTube Video",
+    url: url
+  };
+
+  if (typeof showYouTubePreviewInTV === "function") {
+    showYouTubePreviewInTV(videoId);
+  }
+
+  if (status) status.textContent = "Analyzing YouTube link...";
+  if (out) out.value = "CL is analyzing this YouTube video...";
+
+  const res = await fetch("/music/youtube/analyze-video", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      video_id: videoId,
+      title: selectedYouTubeVideoForCL.title,
+      url: url,
+      artist: document.getElementById("cl-video-artist")?.value || ""
+    })
+  });
+
+  const data = await res.json();
+  if (out) out.value = data.answer || data.message || "No output.";
+  if (status) status.textContent = data.success ? "YouTube link analyzed." : "Analyze failed.";
+}
+
+// =========================
+// YOUTUBE CAMPAIGN POST CARDS
+// =========================
+
+async function buildYouTubePostCardsFromCurrent() {
+  const out = document.getElementById("cl-video-draft");
+  const status = document.getElementById("cl-video-status");
+
+  if (!selectedYouTubeVideoForCL) {
+    alert("Analyze a YouTube video first.");
+    return;
+  }
+
+  const body = {
+    title: selectedYouTubeVideoForCL.title || document.getElementById("cl-video-song")?.value || "YouTube Campaign",
+    artist: document.getElementById("cl-video-artist")?.value || "SolidWorld",
+    youtube_url: selectedYouTubeVideoForCL.url || "",
+    analysis: out?.value || ""
+  };
+
+  if (status) status.textContent = "Building 10 real post cards...";
+
+  const res = await fetch("/music/youtube/post-cards", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+
+  if (status) status.textContent = data.success ? "Post cards created." : "Post card build failed.";
+  await loadYouTubePostCards();
+}
+
+async function loadYouTubePostCards() {
+  const box = document.getElementById("post-drafts-list") || document.getElementById("cl-publishing-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading post cards...";
+
+  const res = await fetch("/music/youtube/post-cards");
+  const data = await res.json();
+
+  if (!Array.isArray(data) || !data.length) {
+    box.innerHTML = "No post cards yet.";
+    return;
+  }
+
+  box.innerHTML = data.slice().reverse().map((c, i) => {
+    window["ytPostCard_" + i] = c;
+    return `
+      <div class="doc-card cl-queue-card">
+        <strong>${c.title}</strong><br>
+        Platform: <b>${c.platform}</b><br>
+        Status: ${c.status}<br>
+        <p><b>Hook:</b> ${c.hook}</p>
+        <p><b>Caption:</b> ${c.caption}</p>
+        <p><b>Hashtags:</b> ${c.hashtags}</p>
+        <div class="command-buttons">
+          <button onclick="loadPostCardIntoDraftStudio(window.ytPostCard_${i})">✍️ Edit Draft</button>
+          <button onclick="addPostCardToQueue(window.ytPostCard_${i})">📤 Add to Queue</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function loadPostCardIntoDraftStudio(card) {
+  const draft = document.getElementById("draft-studio-output") || document.getElementById("cl-video-draft");
+  if (!draft) return;
+
+  draft.value =
+`TITLE:
+${card.title}
+
+PLATFORM:
+${card.platform}
+
+HOOK:
+${card.hook}
+
+CAPTION:
+${card.caption}
+
+HASHTAGS:
+${card.hashtags}
+
+SOURCE:
+${card.youtube_url}`;
+
+  const status = document.getElementById("cl-video-status");
+  if (status) status.textContent = "Post card loaded into Draft Studio.";
+}
+
+async function addPostCardToQueue(card) {
+  const body = {
+    artist: card.artist,
+    song: card.title,
+    video_url: "",
+    draft_text: `TITLE: ${card.title}\n\nHOOK: ${card.hook}\n\nCAPTION: ${card.caption}\n\nHASHTAGS: ${card.hashtags}\n\nSOURCE: ${card.youtube_url}`,
+    platforms: [card.platform]
+  };
+
+  const res = await fetch("/music/publishing-queue", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  alert(data.success ? "Added to CL Publishing Queue." : "Queue failed.");
+}
+
+// =========================
+// AI REWRITE POST CARDS
+// =========================
+
+async function rewritePostCardWithAI(cardIndex) {
+  const card = window["ytPostCard_" + cardIndex];
+  if (!card) {
+    alert("Post card not found.");
+    return;
+  }
+
+  const instruction = prompt(
+    "How should CL rewrite it?",
+    "Make it more viral, emotional, street, clean enough for platforms, and specific to SolidWorld."
+  );
+
+  if (!instruction) return;
+
+  const res = await fetch("/music/youtube/post-card/rewrite", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ card, instruction })
+  });
+
+  const data = await res.json();
+
+  const draft = document.getElementById("draft-studio-content") || document.getElementById("cl-video-draft");
+  if (draft) draft.value = data.answer || "Rewrite failed.";
+
+  const status = document.getElementById("cl-video-status");
+  if (status) status.textContent = data.success ? "AI rewrite loaded into Draft Studio." : "Rewrite failed.";
+}
+
+// override card loader with rewrite button
+async function loadYouTubePostCards() {
+  const box = document.getElementById("cl-publishing-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading post cards...";
+
+  const res = await fetch("/music/youtube/post-cards");
+  const data = await res.json();
+
+  if (!Array.isArray(data) || !data.length) {
+    box.innerHTML = "No post cards yet.";
+    return;
+  }
+
+  box.innerHTML = data.slice().reverse().map((c, i) => {
+    window["ytPostCard_" + i] = c;
+    return `
+      <div class="doc-card cl-queue-card">
+        <strong>${c.title}</strong><br>
+        Platform: <b>${c.platform}</b><br>
+        Status: ${c.status}<br>
+        <p><b>Hook:</b> ${c.hook}</p>
+        <p><b>Caption:</b> ${c.caption}</p>
+        <p><b>Hashtags:</b> ${c.hashtags}</p>
+        <div class="command-buttons">
+          <button onclick="rewritePostCardWithAI(${i})">🤖 AI Rewrite</button>
+          <button onclick="loadPostCardIntoDraftStudio(window.ytPostCard_${i})">✍️ Edit Draft</button>
+          <button onclick="addPostCardToQueue(window.ytPostCard_${i})">📤 Add to Queue</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// =========================
+// REAL CL VIDEO GENERATOR
+// =========================
+
+async function makeCLContentVideos() {
+  const status = document.getElementById("cl-video-status");
+  const out = document.getElementById("cl-video-draft");
+  const queueBox = document.getElementById("cl-publishing-queue-list");
+
+  if (!clUploadedVideoUrl || !clUploadedVideoUrl.includes("/uploads/music_videos/")) {
+    if (status) status.textContent = "Upload a real video first. YouTube preview cannot be edited yet.";
+    alert("Upload the original video file first, then CL can generate edited MP4s.");
+    return;
+  }
+
+  const artist = document.getElementById("cl-video-artist")?.value || "Artist";
+  const hook = prompt("What big hook text should CL put on the video?", "WATCH THIS BEFORE THEY COUNT YOU OUT") || "WATCH THIS";
+
+  if (status) status.textContent = "CL is generating finished videos...";
+  if (out) out.value = "Making real edited MP4 videos with effects and text overlays...";
+
+  const res = await fetch("/music/video/make-content", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      video_url: clUploadedVideoUrl,
+      artist,
+      hook,
+      count: 5,
+      clip_seconds: 15
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    if (status) status.textContent = data.message || "Video generator failed.";
+    if (out) out.value = data.message || "Video generator failed.";
+    return;
+  }
+
+  if (status) status.textContent = data.message;
+
+  if (out) {
+    out.value = data.videos.map(v =>
+`FINISHED VIDEO ${v.number}
+Start: ${v.start}s
+Length: ${v.duration}s
+Video: ${location.origin}${v.url}`
+    ).join("\n\n");
+  }
+
+  if (queueBox) {
+    queueBox.innerHTML = data.videos.map(v => `
+      <div class="doc-card cl-queue-card">
+        <strong>Generated Video ${v.number}</strong><br>
+        Start: ${v.start}s | Length: ${v.duration}s<br>
+        <video controls playsinline src="${v.url}" class="queue-video-preview"></video>
+        <div class="command-buttons">
+          <button onclick="addGeneratedVideoToQueue('${v.url}', 'Generated Video ${v.number}')">📤 Add to Queue</button>
+          <button onclick="navigator.clipboard.writeText('${location.origin}${v.url}')">Copy Link</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+async function addGeneratedVideoToQueue(videoUrl, title) {
+  const draft = document.getElementById("cl-video-draft")?.value || "";
+  const body = {
+    artist: document.getElementById("cl-video-artist")?.value || "Artist",
+    song: title,
+    video_url: videoUrl,
+    draft_text: draft,
+    platforms: ["YouTube Shorts", "TikTok", "Instagram Reels"]
+  };
+
+  const res = await fetch("/music/publishing-queue", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+
+  const data = await res.json();
+  alert(data.success ? "Generated video added to CL Publishing Queue." : "Queue failed.");
+  await loadCLPublishingQueue();
+}
+
+// =========================
+// MAKE ME CONTENT 2.0
+// =========================
+
+async function makeCLContentVideos2() {
+  const status = document.getElementById("cl-video-status");
+  const out = document.getElementById("cl-video-draft");
+  const queueBox = document.getElementById("cl-publishing-queue-list");
+
+  if (!clUploadedVideoUrl || !clUploadedVideoUrl.includes("/uploads/music_videos/")) {
+    alert("Upload a real video file first. YouTube preview can be analyzed, but CL needs the MP4 to generate edited videos.");
+    if (status) status.textContent = "Upload a real video first.";
+    return;
+  }
+
+  const artist = document.getElementById("cl-video-artist")?.value || "Artist";
+  const song = document.getElementById("cl-video-song")?.value || "Music Video";
+  const hook = prompt("What hook text should CL put on the video?", "WATCH THIS BEFORE THEY COUNT YOU OUT") || "WATCH THIS";
+
+  if (status) status.textContent = "Make Me Content 2.0 is creating videos + captions + hashtags...";
+  if (out) out.value = "CL is generating finished videos and post packages...";
+
+  const res = await fetch("/music/video/make-content-2", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      video_url: clUploadedVideoUrl,
+      artist,
+      song,
+      hook,
+      count: 5,
+      clip_seconds: 15
+    })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    if (status) status.textContent = data.message || "Make Me Content 2.0 failed.";
+    if (out) out.value = data.message || "Make Me Content 2.0 failed.";
+    return;
+  }
+
+  if (status) status.textContent = data.message;
+
+  if (out) {
+    out.value = data.videos.map(v =>
+`FINISHED VIDEO ${v.number}
+Start: ${v.start}s
+Length: ${v.duration}s
+Video: ${location.origin}${v.url}
+
+${v.post_package}`
+    ).join("\n\n====================\n\n");
+  }
+
+  if (queueBox) {
+    queueBox.innerHTML = data.videos.map(v => `
+      <div class="doc-card cl-queue-card">
+        <strong>Ready Video ${v.number}</strong><br>
+        Start: ${v.start}s | Length: ${v.duration}s<br>
+        <video controls playsinline src="${v.url}" class="queue-video-preview"></video>
+        <pre>${v.post_package}</pre>
+      </div>
+    `).join("");
+  }
+
+  await loadCLPublishingQueue();
+}
+
+// =========================
+// CL POSTING DESK
+// =========================
+
+async function updateQueueItem(id, patch) {
+  const res = await fetch("/music/publishing-queue/update", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id, patch })
+  });
+
+  const data = await res.json();
+  if (!data.success) alert(data.message || "Update failed.");
+  await loadCLPublishingQueue();
+}
+
+function editQueueItem(id) {
+  const title = document.getElementById(`queue-title-${id}`)?.value || "";
+  const draft = document.getElementById(`queue-draft-${id}`)?.value || "";
+
+  updateQueueItem(id, {
+    song: title,
+    draft_text: draft,
+    status: "Edited"
+  });
+}
+
+async function loadCLPublishingQueue() {
+  const box = document.getElementById("cl-publishing-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading Posting Desk...";
+
+  const res = await fetch("/music/publishing-queue");
+  const data = await res.json();
+
+  if (!Array.isArray(data) || !data.length) {
+    box.innerHTML = "No posts in Posting Desk yet.";
+    return;
+  }
+
+  box.innerHTML = data.slice().reverse().map(item => `
+    <div class="posting-desk-card">
+      <div class="posting-desk-video">
+        ${item.video_url ? `<video controls playsinline src="${item.video_url}"></video>` : `<div class="no-video-box">No video file yet</div>`}
+      </div>
+
+      <div class="posting-desk-info">
+        <input id="queue-title-${item.id}" value="${(item.song || "Untitled").replace(/"/g, "&quot;")}" placeholder="Post title">
+
+        <textarea id="queue-draft-${item.id}" placeholder="Caption / hashtags / platform copy">${item.draft_text || ""}</textarea>
+
+        <div class="posting-meta">
+          <span>Status: <b>${item.status || "Queued"}</b></span>
+          <span>Platforms: ${(item.platforms || []).join(", ")}</span>
+          <span>Source: ${item.source || "CL"}</span>
+        </div>
+
+        <div class="command-buttons posting-actions">
+          <button onclick="editQueueItem('${item.id}')">💾 Save Edit</button>
+          <button onclick="updateQueueItem('${item.id}', {status:'Approved'})">✅ Approve</button>
+          <button onclick="updateQueueItem('${item.id}', {status:'Needs Edit'})">✍️ Needs Edit</button>
+          <button onclick="postQueueItemToYouTube('${item.id}')">📤 YouTube Private</button>
+          <button onclick="copyTextRaw(document.getElementById('queue-draft-${item.id}').value)">Copy</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+// =========================
+// CL QUEUE ACTIONS UPGRADE
+// =========================
+
+async function deleteQueueItem(id) {
+  if (!confirm("Delete this queue item?")) return;
+
+  const res = await fetch("/music/publishing-queue/delete", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ id })
+  });
+
+  const data = await res.json();
+  alert(data.message || "Deleted.");
+  await loadCLPublishingQueue();
+}
+
+function openQueueVideo(url) {
+  if (!url) {
+    alert("No video file found.");
+    return;
+  }
+  window.open(url, "_blank");
+}
+
+function downloadQueueVideo(url) {
+  if (!url) {
+    alert("No video file found.");
+    return;
+  }
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = url.split("/").pop() || "CL-video.mp4";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// override Posting Desk loader with full actions
+async function loadCLPublishingQueue() {
+  const box = document.getElementById("cl-publishing-queue-list");
+  if (!box) return;
+
+  box.innerHTML = "Loading Posting Desk...";
+
+  const res = await fetch("/music/publishing-queue");
+  const data = await res.json();
+
+  if (!Array.isArray(data) || !data.length) {
+    box.innerHTML = "No posts in Posting Desk yet.";
+    return;
+  }
+
+  box.innerHTML = data.slice().reverse().map(item => {
+    const safeTitle = (item.song || "Untitled").replace(/"/g, "&quot;");
+    const safeDraft = item.draft_text || "";
+    const video = item.video_url || "";
+
+    return `
+      <div class="posting-desk-card">
+        <div class="posting-desk-video">
+          ${video ? `<video controls playsinline src="${video}"></video>` : `<div class="no-video-box">No video file yet</div>`}
+          <div class="command-buttons video-actions">
+            <button onclick="openQueueVideo('${video}')">👁️ Watch</button>
+            <button onclick="downloadQueueVideo('${video}')">⬇️ Download</button>
+          </div>
+        </div>
+
+        <div class="posting-desk-info">
+          <input id="queue-title-${item.id}" value="${safeTitle}" placeholder="Post title">
+
+          <textarea id="queue-draft-${item.id}" placeholder="Caption / hashtags / platform copy">${safeDraft}</textarea>
+
+          <div class="posting-meta">
+            <span>Status: <b>${item.status || "Queued"}</b></span>
+            <span>Platforms: ${(item.platforms || []).join(", ")}</span>
+            <span>Source: ${item.source || "CL"}</span>
+          </div>
+
+          <div class="command-buttons posting-actions">
+            <button onclick="editQueueItem('${item.id}')">💾 Save Edit</button>
+            <button onclick="updateQueueItem('${item.id}', {status:'Approved'})">✅ Approve</button>
+            <button onclick="updateQueueItem('${item.id}', {status:'Needs Edit'})">✍️ Needs Edit</button>
+            <button onclick="postQueueItemToYouTube('${item.id}')">📤 YouTube Private</button>
+            <button onclick="copyTextRaw(document.getElementById('queue-draft-${item.id}').value)">Copy</button>
+            <button onclick="deleteQueueItem('${item.id}')">🗑️ Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}

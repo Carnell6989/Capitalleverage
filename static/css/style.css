@@ -1120,3 +1120,499 @@ button {
   display: block;
   margin-bottom: 8px;
 }
+
+.music-growth-campaign-engine {
+  border: 1px solid #d4af37;
+  background: linear-gradient(180deg, rgba(212,175,55,0.08), rgba(7,16,32,0.35));
+}
+
+.music-growth-campaign-engine textarea {
+  min-height: 120px;
+}
+
+.music-action-queue-panel {
+  border: 1px solid #d4af37;
+}
+
+.campaign-action-card {
+  margin-bottom: 12px;
+  border-left: 4px solid #d4af37;
+}
+
+.campaign-control-room {
+  border: 1px solid #d4af37;
+}
+
+.campaign-big-screen {
+  background: radial-gradient(circle at top left, rgba(37,99,235,.28), rgba(7,16,32,.95));
+  border: 1px solid #2d3345;
+  border-radius: 22px;
+  padding: 22px;
+  margin: 14px 0;
+}
+
+.campaign-big-screen h2 {
+  margin: 0 0 6px;
+  font-size: 30px;
+}
+
+.campaign-progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.campaign-progress-bar {
+  flex: 1;
+  height: 18px;
+  background: #050814;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid #334155;
+}
+
+#campaign-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #d4af37, #2563eb);
+}
+
+.campaign-stage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.campaign-stage-grid div {
+  background: #071020;
+  border: 1px solid #2d3345;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.campaign-stage-grid strong {
+  display: block;
+  color: #d4af37;
+}
+
+.campaign-stage-grid span {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.music-post-builder-panel {
+  border: 1px solid #d4af37;
+}
+
+.post-draft-card pre {
+  white-space: pre-wrap;
+  background: #050814;
+  border-radius: 14px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+/* Music Manager cleanup */
+.campaign-action-card:nth-of-type(n+8) {
+  display: none;
+}
+
+.music-action-queue-panel,
+.music-post-builder-panel,
+.campaign-control-room {
+  max-height: 700px;
+  overflow-y: auto;
+}
+
+.campaign-action-card {
+  margin: 12px 0;
+  padding: 16px;
+  border-left: 5px solid #d4af37;
+}
+
+.campaign-action-card .command-buttons button {
+  margin-top: 8px;
+}
+
+.post-draft-card {
+  border-left: 5px solid #2563eb;
+}
+
+.music-manager-flow-note {
+  background: #071020;
+  border: 1px solid #d4af37;
+  border-radius: 16px;
+  padding: 14px;
+  margin: 12px 0;
+}
+
+.music-draft-studio-panel {
+  border: 1px solid #d4af37;
+}
+
+#draft-studio-content {
+  min-height: 260px;
+  white-space: pre-wrap;
+}
+
+#draft-studio-instruction {
+  min-height: 90px;
+}
+
+.cl-video-tv-studio {
+  border: 1px solid #d4af37;
+}
+
+.tv-studio-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.4fr) minmax(240px, .8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.tv-screen-wrap {
+  background: #020617;
+  border: 2px solid #d4af37;
+  border-radius: 22px;
+  padding: 14px;
+  box-shadow: 0 0 28px rgba(212,175,55,.18);
+}
+
+.cl-tv-screen {
+  width: 100%;
+  min-height: 320px;
+  background: #000;
+  border-radius: 16px;
+}
+
+.tv-controls input,
+.tv-controls textarea {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+#cl-video-draft {
+  width: 100%;
+  min-height: 260px;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .tv-studio-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cl-tv-screen {
+    min-height: 220px;
+  }
+}
+
+.music-market-scan-panel {
+  border: 1px solid #d4af37;
+}
+
+#market-scan-output {
+  width: 100%;
+  min-height: 320px;
+  margin-top: 14px;
+}
+
+.cl-publishing-queue-panel {
+  border: 1px solid #d4af37;
+}
+
+.cl-queue-card {
+  margin-bottom: 14px;
+  border-left: 5px solid #d4af37;
+}
+
+.queue-video-preview {
+  width: 100%;
+  max-width: 420px;
+  margin: 12px 0;
+  border-radius: 14px;
+  background: #000;
+}
+
+.cl-queue-card pre {
+  white-space: pre-wrap;
+  background: #050814;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.music-short-export-card {
+  border-left: 5px solid #d4af37;
+}
+
+.youtube-picker-card {
+  margin: 10px 0;
+}
+
+.youtube-picker-thumb {
+  width: 140px;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+#cl-youtube-embed-preview {
+  width: 100%;
+  min-height: 320px;
+  border: 0;
+  background: #000;
+  border-radius: 16px;
+}
+
+/* =========================
+   BIG CL VIDEO TV STUDIO
+   ========================= */
+
+.cl-video-tv-studio {
+  padding: 26px !important;
+}
+
+.cl-video-tv-studio h3 {
+  font-size: 1.6rem !important;
+}
+
+.tv-studio-grid {
+  grid-template-columns: 1.7fr 0.8fr !important;
+  gap: 24px !important;
+}
+
+.tv-screen-wrap {
+  padding: 18px !important;
+  border-radius: 24px !important;
+}
+
+.cl-tv-screen,
+#cl-video-player,
+#cl-youtube-embed-preview {
+  width: 100% !important;
+  min-height: 520px !important;
+  border-radius: 22px !important;
+  background: #000 !important;
+}
+
+#cl-video-status {
+  font-size: 1.15rem !important;
+  margin-top: 14px !important;
+}
+
+.tv-controls button {
+  width: 100% !important;
+  min-height: 58px !important;
+  font-size: 1rem !important;
+  margin-bottom: 10px !important;
+}
+
+.tv-controls input,
+.tv-controls textarea {
+  width: 100% !important;
+  min-height: 56px !important;
+  font-size: 1rem !important;
+}
+
+#cl-video-draft {
+  min-height: 360px !important;
+  font-size: 1rem !important;
+  line-height: 1.45 !important;
+}
+
+/* iPhone/tablet layout */
+@media (max-width: 900px) {
+  .tv-studio-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .cl-tv-screen,
+  #cl-video-player,
+  #cl-youtube-embed-preview {
+    min-height: 420px !important;
+  }
+
+  .cl-video-tv-studio {
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .cl-tv-screen,
+  #cl-video-player,
+  #cl-youtube-embed-preview {
+    min-height: 360px !important;
+  }
+
+  .tv-controls button {
+    min-height: 62px !important;
+    font-size: 1.05rem !important;
+  }
+}
+
+/* =========================
+   MUSIC OS CLEAN LAYOUT
+   ========================= */
+
+.music-action-queue-panel,
+.music-post-builder-panel,
+.music-draft-studio-panel,
+.music-market-scan-panel,
+.campaign-control-room,
+.music-full-system,
+.growth-engine-panel {
+  margin-top: 18px;
+}
+
+/* make old clutter less loud */
+.music-action-queue-panel,
+.music-post-builder-panel,
+.music-draft-studio-panel {
+  opacity: .92;
+}
+
+/* clean button wrapping */
+.cl-video-tv-studio .command-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.cl-video-tv-studio .command-buttons button {
+  width: 100% !important;
+  min-height: 62px !important;
+}
+
+/* phone: one button per line */
+@media (max-width: 700px) {
+  .cl-video-tv-studio .command-buttons {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* make YouTube picker scroll instead of taking whole page */
+#youtube-picker-results {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* make post output easier */
+#cl-video-draft,
+#draft-studio-content {
+  min-height: 420px !important;
+  font-size: 1.05rem !important;
+}
+
+
+.generated-video-card,
+.cl-queue-card video {
+  border-radius: 18px;
+  background: #000;
+}
+
+
+/* =========================
+   CL POSTING DESK
+   ========================= */
+
+.posting-desk-card {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(212,175,55,.45);
+  border-radius: 20px;
+  background: rgba(5,8,20,.72);
+}
+
+.posting-desk-video video,
+.no-video-box {
+  width: 100%;
+  min-height: 360px;
+  border-radius: 18px;
+  background: #000;
+}
+
+.no-video-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+}
+
+.posting-desk-info input,
+.posting-desk-info textarea {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.posting-desk-info textarea {
+  min-height: 260px;
+}
+
+.posting-meta {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 14px;
+  font-size: .95rem;
+}
+
+.posting-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 800px) {
+  .posting-desk-card {
+    grid-template-columns: 1fr;
+  }
+
+  .posting-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* BIGGER POSTING DESK */
+.posting-desk-card {
+  grid-template-columns: 420px 1fr !important;
+  gap: 24px !important;
+  padding: 24px !important;
+  border-radius: 24px !important;
+}
+
+.posting-desk-video video,
+.no-video-box {
+  min-height: 520px !important;
+  font-size: 1.2rem !important;
+}
+
+.posting-desk-info input {
+  min-height: 60px !important;
+  font-size: 1.1rem !important;
+}
+
+.posting-desk-info textarea {
+  min-height: 360px !important;
+  font-size: 1.08rem !important;
+  line-height: 1.5 !important;
+}
+
+.posting-actions button,
+.video-actions button {
+  min-height: 64px !important;
+  font-size: 1.05rem !important;
+}
+
+@media (max-width: 900px) {
+  .posting-desk-card {
+    grid-template-columns: 1fr !important;
+  }
+
+  .posting-desk-video video,
+  .no-video-box {
+    min-height: 430px !important;
+  }
+}
