@@ -1,31 +1,4 @@
-.env
-venv/
+backups/
+*.log
 __pycache__/
-*.pyc
-uploads/
-data/
-credentials.json
-token.pickle
-token.json
-
-# secret env files
-.env
-.env.*
-*.env
-*.env.*
-google_client_secret.json
-
-# OAuth / secrets
-google_client_secret.json
-data/youtube_token.json
-.env
-.env.*
-*.env
-*.env.*
-
-# local secrets
-.env
-google_client_secret.json
-data/youtube_token.json
-data/youtube_oauth_state.json
-.env.backup*
+venv/
